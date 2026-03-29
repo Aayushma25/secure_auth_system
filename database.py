@@ -73,6 +73,26 @@ def init_db() -> None:
         """)
 
 
+         # ---- Customer profiles ----
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS customers (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id         INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+            customer_id     TEXT    NOT NULL UNIQUE,   -- CUS-XXXXXXXXXX
+            full_name       TEXT    NOT NULL,
+            email           TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+            phone           TEXT    NOT NULL,
+            address         TEXT,
+            kyc_status      TEXT    NOT NULL DEFAULT 'pending'
+                                CHECK(kyc_status IN ('pending','verified','rejected')),
+            created_at      REAL    NOT NULL,
+            hmac            TEXT    NOT NULL DEFAULT ''
+        )
+        """)
+
+
+
+
 
 
 
