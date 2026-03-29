@@ -90,6 +90,26 @@ def init_db() -> None:
         )
         """)
 
+        # ---- Employee profiles ----
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS employees (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id         INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+            employee_id     TEXT    NOT NULL UNIQUE,   -- EMP-XXXXXXXXXX
+            full_name       TEXT    NOT NULL,
+            email           TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+            phone           TEXT    NOT NULL,
+            department      TEXT    NOT NULL,
+            job_title       TEXT    NOT NULL,
+            access_level    TEXT    NOT NULL DEFAULT 'standard'
+                                CHECK(access_level IN ('standard','senior','manager','admin')),
+            created_at      REAL    NOT NULL,
+            hmac            TEXT    NOT NULL DEFAULT ''
+        )
+        """)
+
+
+
 
 
 
