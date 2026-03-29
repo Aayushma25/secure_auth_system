@@ -133,6 +133,23 @@ def init_db() -> None:
         )
         """)
 
+        
+        # --- Audit log (append-only by convention; never UPDATE/DELETE) ----
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp   REAL    NOT NULL,
+            event_type  TEXT    NOT NULL,
+            username    TEXT,                    -- NULL for system events
+            user_id     INTEGER,
+            outcome     TEXT    NOT NULL CHECK(outcome IN ('success','failure','info')),
+            detail      TEXT,
+            hmac        TEXT    NOT NULL DEFAULT ''
+        )
+        """)
+
+        
+
 
 
 
