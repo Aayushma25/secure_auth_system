@@ -109,6 +109,32 @@ def init_db() -> None:
         """)
 
 
+        # --- Recovery tokens ---
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS recovery_tokens (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            token_hash  TEXT    NOT NULL UNIQUE,  -- stored as SHA-256 hash, not plaintext
+            expires_at  REAL    NOT NULL,
+            used        INTEGER NOT NULL DEFAULT 0,
+            created_at  REAL    NOT NULL
+        )
+        """)
+
+        # --- Sessions ---
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS sessions (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            token_hash  TEXT    NOT NULL UNIQUE,
+            expires_at  REAL    NOT NULL,
+            ip_hint     TEXT,                    -- informational only
+            created_at  REAL    NOT NULL
+        )
+        """)
+
+
+
 
 
 
