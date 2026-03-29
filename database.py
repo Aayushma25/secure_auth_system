@@ -42,7 +42,39 @@ def db_cursor():
         raise
     finally:
         conn.close()
-        
+
+
+
+# ---------------------------------------------------------------------------
+# Schema creation
+# ---------------------------------------------------------------------------
+
+
+def init_db() -> None:
+    """Create all tables if they do not yet exist."""
+    with db_cursor() as cur:
+
+        # --- Users (shared authentication record) ---
+        cur.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            username        TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+            password_hash   TEXT    NOT NULL,
+            role            TEXT    NOT NULL CHECK(role IN ('customer','employee')),
+            totp_secret     TEXT,           -- NULL until MFA is enrolled
+            mfa_enabled     INTEGER NOT NULL DEFAULT 0,
+            is_locked       INTEGER NOT NULL DEFAULT 0,
+            failed_attempts INTEGER NOT NULL DEFAULT 0,
+            locked_until    REAL,           -- Unix timestamp; NULL = not locked
+            last_login      REAL,
+            created_at      REAL    NOT NULL,
+            hmac            TEXT    NOT NULL DEFAULT ''
+        )
+        """)
+
+
+
+
 
 
 
