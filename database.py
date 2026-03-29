@@ -13,6 +13,16 @@ logger = logging.getLogger("fintech.db")
 DB_PATH = os.path.join(os.path.dirname(__file__), "fintech_auth.db")
 
 
+def get_connection() -> sqlite3.Connection:
+    """
+    Create and open the SQLite database with security-oriented pragmas.
+    """
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn.row_factory = sqlite3.Row          # We can access rows by column name
+    conn.execute("PRAGMA journal_mode=WAL") # Can write logging without blocking readers
+    conn.execute("PRAGMA foreign_keys=ON")  # enforce foreign key constraints
+    conn.execute("PRAGMA secure_delete=ON") # overwrite deleted data with zeros
+    return conn
 
 
 
