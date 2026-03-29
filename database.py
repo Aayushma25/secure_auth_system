@@ -25,6 +25,31 @@ def get_connection() -> sqlite3.Connection:
     return conn
 
 
+@contextmanager
+def db_cursor():
+
+    """Context manager: yields a cursor, commits on success, rolls back on error.
+    This ensures that database operations are atomic and that connections are properly closed.
+    """
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        yield cursor
+        conn.commit()
+    except Exception as exc:
+        conn.rollback()
+        logger.error("DB error (rolled back): %s", type(exc).__name__)
+        raise
+    finally:
+        conn.close()
+        
+
+
+
+
+
+
+
 
 
 
