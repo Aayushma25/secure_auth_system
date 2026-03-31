@@ -49,4 +49,29 @@ def hash_password(plaintext: str) -> str:
         dklen=SCRYPT_DKLEN,
     )
     return f"scrypt${salt.hex()}${dk.hex()}"
+ 
+
+def verify_password(plaintext: str, stored_hash: str) -> bool:
+    """
+    Constant-time comparison to prevent timing attacks.
+    Returns True only if plaintext matches the stored hash.
+    """
+    try:
+        algo, salt_hex, dk_hex = stored_hash.split("$")
+        if algo != "scrypt":
+            return False
+        salt = bytes.fromhex(salt_hex)
+        expected = bytes.fromhex(dk_hex)
+        actual = hashlib.scrypt(
+            plaintext.encode("utf-8"),
+            salt=salt,
+            n=SCRYPT_N,
+            r=SCRYPT_R,
+            p=SCRYPT_P,
+            dklen=SCRYPT_DKLEN,
+        )
+        return hmac.compare_digest(expected, actual)  # constant-time
+    except Exception:
+        return False
+    
 
