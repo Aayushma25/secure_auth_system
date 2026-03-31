@@ -73,5 +73,28 @@ def verify_password(plaintext: str, stored_hash: str) -> bool:
         return hmac.compare_digest(expected, actual)  # constant-time
     except Exception:
         return False
+
+
+def validate_password_strength(password: str) -> tuple[bool, str]:
+    """
+    Enforce NIST SP 800-63B-aligned password policy:
+      - Minimum 12 characters
+      - At least one uppercase, one lowercase, one digit, one symbol
+      - No leading/trailing whitespace (common mistake)
+    Returns (ok: bool, reason: str).
+    """
+    if len(password) < 12:
+        return False, "Password must be at least 12 characters long."
+    if password != password.strip():
+        return False, "Password must not start or end with whitespace."
+    if not any(c.isupper() for c in password):
+        return False, "Password must contain at least one uppercase letter."
+    if not any(c.islower() for c in password):
+        return False, "Password must contain at least one lowercase letter."
+    if not any(c.isdigit() for c in password):
+        return False, "Password must contain at least one digit."
+    if not any(c in "!@#$%^&*()_+-=[]{}|;':\",./<>?" for c in password):
+        return False, "Password must contain at least one special character."
+    return True, "OK"
     
 
