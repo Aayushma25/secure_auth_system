@@ -118,10 +118,16 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
 
 
 RECOVERY_TOKEN_BYTES = 32   # 256-bit entropy
-
+SESSION_TOKEN_BYTES = 32
 RECOVERY_TTL_SECONDS = 3600  # 1 hour
 
 
 def generate_recovery_token() -> str:
     """URL-safe 256-bit cryptographically secure random token."""
     return secrets.token_urlsafe(RECOVERY_TOKEN_BYTES)
+
+def generate_session_token() -> str:
+    """URL-safe 256-bit session identifier."""
+    return secrets.token_urlsafe(SESSION_TOKEN_BYTES)
+
+
