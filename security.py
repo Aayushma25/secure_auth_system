@@ -137,3 +137,23 @@ def generate_customer_id() -> str:
     """
     return "CUS-" + secrets.token_hex(6).upper()
 
+
+
+# ---------------------------------------------------------------------------
+# Data integrity — HMAC-SHA256 checksums
+# ---------------------------------------------------------------------------
+
+def _integrity_key() -> bytes:
+    """
+    Load or create a persistent HMAC key stored in a protected local file.
+    In production this would be in a secrets manager / HSM.
+    """
+    key_path = os.path.join(os.path.dirname(__file__), ".integrity_key")
+    if os.path.exists(key_path):
+        with open(key_path, "rb") as f:
+            return f.read()
+    key = os.urandom(32)
+    # Write with restrictive permissions (owner read-only)
+    with open(os.open(key_path, os.O_CREAT | os.O_WRONLY, 0o600), "wb") as f:
+        f.write(key)
+    return key
