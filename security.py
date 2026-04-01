@@ -98,3 +98,30 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
     return True, "OK"
     
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+RECOVERY_TOKEN_BYTES = 32   # 256-bit entropy
+
+RECOVERY_TTL_SECONDS = 3600  # 1 hour
+
+
+def generate_recovery_token() -> str:
+    """URL-safe 256-bit cryptographically secure random token."""
+    return secrets.token_urlsafe(RECOVERY_TOKEN_BYTES)
