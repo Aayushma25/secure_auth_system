@@ -130,4 +130,10 @@ def generate_session_token() -> str:
     """URL-safe 256-bit session identifier."""
     return secrets.token_urlsafe(SESSION_TOKEN_BYTES)
 
+def generate_customer_id() -> str:
+    """
+    Generate a unique customer ID: 'CUS-' prefix + 12 hex chars (6 random bytes).
+    E.g.  CUS-A3F2891C04B7
+    """
+    return "CUS-" + secrets.token_hex(6).upper()
 
