@@ -165,7 +165,7 @@ def compute_record_hmac(record: dict) -> str:
     Fields are sorted to ensure deterministic serialisation.
     The 'hmac' field itself is excluded before computation.
     """
-    
+
     # Exclude 'hmac' (the field being signed) and 'id' (auto-increment PK,
     # unknown at insert time, so it was never part of the original MAC).
 
@@ -175,7 +175,14 @@ def compute_record_hmac(record: dict) -> str:
     sig = hmac.new(_integrity_key(), canonical.encode("utf-8"), hashlib.sha256)
     return sig.hexdigest()
 
-
+def verify_record_hmac(record: dict) -> bool:
+    """
+    Returns True if the stored HMAC matches a freshly computed one.
+    Any field tampering will invalidate the MAC.
+    """
+    stored = record.get("hmac", "")
+    expected = compute_record_hmac(record)
+    return hmac.compare_digest(stored, expected)
 
 
 
