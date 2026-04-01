@@ -157,3 +157,32 @@ def _integrity_key() -> bytes:
     with open(os.open(key_path, os.O_CREAT | os.O_WRONLY, 0o600), "wb") as f:
         f.write(key)
     return key
+
+
+def compute_record_hmac(record: dict) -> str:
+    """
+    Compute HMAC-SHA256 over a canonical JSON representation of a record.
+    Fields are sorted to ensure deterministic serialisation.
+    The 'hmac' field itself is excluded before computation.
+    """
+    
+    # Exclude 'hmac' (the field being signed) and 'id' (auto-increment PK,
+    # unknown at insert time, so it was never part of the original MAC).
+
+    _EXCLUDE = {"hmac", "id"}
+    payload = {k: v for k, v in record.items() if k not in _EXCLUDE}
+    canonical = json.dumps(payload, sort_keys=True, ensure_ascii=True)
+    sig = hmac.new(_integrity_key(), canonical.encode("utf-8"), hashlib.sha256)
+    return sig.hexdigest()
+
+
+
+
+
+
+
+
+
+
+
+
