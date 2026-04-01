@@ -98,6 +98,23 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
     return True, "OK"
     
 
+# ---------------------------------------------------------------------------
+# TOTP — RFC 6238 / RFC 4226 (HMAC-Based OTP)
+# ---------------------------------------------------------------------------
+
+TOTP_STEP = 30          # seconds per time-step
+TOTP_DIGITS = 6         # OTP length
+TOTP_WINDOW = 1         # ±1 step tolerance for clock drift
+TOTP_SECRET_BYTES = 20  # 160-bit secret (standard for SHA-1 TOTP)
+
+
+def generate_totp_secret() -> str:
+    """
+    Generate a new random TOTP secret encoded as base32.
+    Base32 is the standard encoding for TOTP QR codes and manual entry.
+    """
+    raw = os.urandom(TOTP_SECRET_BYTES)
+    return base64.b32encode(raw).decode("utf-8")
 
 
 
