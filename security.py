@@ -149,13 +149,16 @@ def verify_totp(secret_b32: str, code: str) -> bool:
         return False
 
 
-
-
-
-
-
-
-
+def get_totp_uri(secret_b32: str, username: str, issuer: str = "FinTechAuth") -> str:
+    """
+    Build the otpauth:// URI for QR code generation (e.g. Google Authenticator).
+    """
+    from urllib.parse import quote
+    return (
+        f"otpauth://totp/{quote(issuer)}:{quote(username)}"
+        f"?secret={secret_b32}&issuer={quote(issuer)}&algorithm=SHA1"
+        f"&digits={TOTP_DIGITS}&period={TOTP_STEP}"
+    )
 
 
 
