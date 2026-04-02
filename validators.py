@@ -120,3 +120,9 @@ def validate_totp_code(value: str) -> tuple[bool, str]:
         return False, "OTP code must be exactly 6 digits."
     return True, "OK"
 
+def validate_address(value: str) -> tuple[bool, str]:
+    """Optional field — allow blank, but cap length."""
+    v = (value or "").strip()
+    if len(v) > 200:
+        return False, "Address must be at most 200 characters."
+    return True, "OK"
