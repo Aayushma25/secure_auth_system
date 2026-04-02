@@ -77,5 +77,19 @@ def validate_phone(value: str) -> tuple[bool, str]:
         return False, "Phone number contains invalid characters."
     return True, "OK"
 
+def validate_full_name(value: str) -> tuple[bool, str]:
+    v = (value or "").strip()
+    if not v:
+        return False, "Full name is required."
+    if len(v) < 2:
+        return False, "Full name must be at least 2 characters."
+    if len(v) > 100:
+        return False, "Full name must be at most 100 characters."
+    if not _NAME_RE.match(v):
+        return False, "Full name contains invalid characters."
+    return True, "OK"
+
+
+
 
 
