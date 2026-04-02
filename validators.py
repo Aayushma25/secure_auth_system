@@ -90,6 +90,29 @@ def validate_full_name(value: str) -> tuple[bool, str]:
     return True, "OK"
 
 
+def validate_department(value: str) -> tuple[bool, str]:
+    VALID_DEPARTMENTS = {
+        "Engineering", "Finance", "Compliance", "Risk",
+        "Operations", "Customer Support", "Product", "HR",
+        "Legal", "Marketing", "Executive",
+    }
+    v = (value or "").strip()
+    if not v:
+        return False, "Department is required."
+    if v not in VALID_DEPARTMENTS:
+        return False, f"Department must be one of: {', '.join(sorted(VALID_DEPARTMENTS))}."
+    return True, "OK"
+
+
+def validate_job_title(value: str) -> tuple[bool, str]:
+    v = (value or "").strip()
+    if not v:
+        return False, "Job title is required."
+    if len(v) < 2:
+        return False, "Job title must be at least 2 characters."
+    if len(v) > 80:
+        return False, "Job title must be at most 80 characters."
+    return True, "OK"
 
 
 
