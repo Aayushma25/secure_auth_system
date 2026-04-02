@@ -133,6 +133,20 @@ def generate_totp(secret_b32: str) -> str:
     return str(_hotp(secret_b32, counter)).zfill(TOTP_DIGITS)
 
 
+def verify_totp(secret_b32: str, code: str) -> bool:
+    """
+    Verify a TOTP code within ±TOTP_WINDOW time-steps (handles clock drift).
+    Uses constant-time string comparison.
+    """
+    try:
+        counter = int(time.time()) // TOTP_STEP
+        for delta in range(-TOTP_WINDOW, TOTP_WINDOW + 1):
+            expected = str(_hotp(secret_b32, counter + delta)).zfill(TOTP_DIGITS)
+            if hmac.compare_digest(expected, code.strip()):
+                return True
+        return False
+    except Exception:
+        return False
 
 
 
