@@ -126,3 +126,16 @@ def validate_address(value: str) -> tuple[bool, str]:
     if len(v) > 200:
         return False, "Address must be at most 200 characters."
     return True, "OK"
+
+
+# ---------------------------------------------------------------------------
+# Helper: strip / sanitise a free-text string for safe log output
+# (removes control characters; does NOT escape SQL — use parameterised queries)
+# ---------------------------------------------------------------------------
+
+def sanitise_for_log(value: str, max_len: int = 100) -> str:
+    """Remove non-printable control characters and truncate."""
+    if not value:
+        return ""
+    cleaned = "".join(c for c in value if c.isprintable())
+    return cleaned[:max_len]
