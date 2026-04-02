@@ -22,6 +22,9 @@ _PHONE_RE = re.compile(r"^\+?[\d\s\-\(\)]{7,20}$")
 # Username: 3–30 alphanumeric + underscore/hyphen, must start with a letter
 _USERNAME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9_\-]{2,29}$")
 
+# Full name: unicode letters, spaces, hyphens, apostrophes; 2–100 chars
+_NAME_RE = re.compile(r"^[\w\s'\-\.]{2,100}$", re.UNICODE)
+
 # Customer ID: CUS- followed by exactly 12 uppercase hex chars
 _CUSTOMER_ID_RE = re.compile(r"^CUS-[0-9A-F]{12}$")
 
