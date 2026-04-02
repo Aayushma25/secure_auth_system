@@ -63,6 +63,16 @@ def validate_email(value: str) -> tuple[bool, str]:
         return False, "Email address format is invalid."
     return True, "OK"
 
+def validate_phone(value: str) -> tuple[bool, str]:
+    v = (value or "").strip()
+    if not v:
+        return False, "Phone number is required."
+    digits_only = re.sub(r"[\s\-\(\)\+]", "", v)
+    if len(digits_only) < 7 or len(digits_only) > 15:
+        return False, "Phone number must contain 7–15 digits."
+    if not _PHONE_RE.match(v):
+        return False, "Phone number contains invalid characters."
+    return True, "OK"
 
 
 
