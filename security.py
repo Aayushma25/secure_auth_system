@@ -116,9 +116,21 @@ def generate_totp_secret() -> str:
     raw = os.urandom(TOTP_SECRET_BYTES)
     return base64.b32encode(raw).decode("utf-8")
 
+def _hotp(secret_b32: str, counter: int) -> int:
+    """
+    RFC 4226 HOTP: HMAC-SHA1 over the counter, then dynamic truncation.
+    """
+    key = base64.b32decode(secret_b32, casefold=True)
+    msg = struct.pack(">Q", counter)                  # big-endian 8-byte counter
+    h = hmac.new(key, msg, hashlib.sha1).digest()     # 20-byte HMAC
+    offset = h[-1] & 0x0F
+    code = struct.unpack(">I", h[offset:offset + 4])[0] & 0x7FFFFFFF
+    return code % (10 ** TOTP_DIGITS)
 
-
-
+def generate_totp(secret_b32: str) -> str:
+    """Return the current TOTP code as a zero-padded string."""
+    counter = int(time.time()) // TOTP_STEP
+    return str(_hotp(secret_b32, counter)).zfill(TOTP_DIGITS)
 
 
 
