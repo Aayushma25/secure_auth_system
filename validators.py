@@ -35,7 +35,6 @@ _EMPLOYEE_ID_RE = re.compile(r"^EMP-[0-9A-F]{12}$")
 _TOTP_RE = re.compile(r"^\d{6}$")
 
 
-
 # ---------------------------------------------------------------------------
 # Validators
 # ---------------------------------------------------------------------------
@@ -115,4 +114,9 @@ def validate_job_title(value: str) -> tuple[bool, str]:
     return True, "OK"
 
 
+def validate_totp_code(value: str) -> tuple[bool, str]:
+    v = (value or "").strip()
+    if not _TOTP_RE.match(v):
+        return False, "OTP code must be exactly 6 digits."
+    return True, "OK"
 
