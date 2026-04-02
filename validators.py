@@ -33,4 +33,28 @@ _TOTP_RE = re.compile(r"^\d{6}$")
 
 
 
+# ---------------------------------------------------------------------------
+# Validators
+# ---------------------------------------------------------------------------
+
+def validate_username(value: str) -> tuple[bool, str]:
+    v = (value or "").strip()
+    if not v:
+        return False, "Username is required."
+    if len(v) < 3:
+        return False, "Username must be at least 3 characters."
+    if len(v) > 30:
+        return False, "Username must be at most 30 characters."
+    if not _USERNAME_RE.match(v):
+        return False, (
+            "Username may only contain letters, digits, underscores, or hyphens, "
+            "and must start with a letter."
+        )
+    return True, "OK"
+
+
+
+
+
+
 
