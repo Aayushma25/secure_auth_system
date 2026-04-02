@@ -53,7 +53,15 @@ def validate_username(value: str) -> tuple[bool, str]:
     return True, "OK"
 
 
-
+def validate_email(value: str) -> tuple[bool, str]:
+    v = (value or "").strip().lower()
+    if not v:
+        return False, "Email is required."
+    if len(v) > 254:
+        return False, "Email address is too long."
+    if not _EMAIL_RE.match(v):
+        return False, "Email address format is invalid."
+    return True, "OK"
 
 
 
