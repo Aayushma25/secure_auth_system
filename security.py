@@ -162,6 +162,10 @@ def get_totp_uri(secret_b32: str, username: str, issuer: str = "FinTechAuth") ->
 
 
 
+# ---------------------------------------------------------------------------
+# Secure tokens — account recovery & session
+# ---------------------------------------------------------------------------
+
 
 RECOVERY_TOKEN_BYTES = 32   # 256-bit entropy
 SESSION_TOKEN_BYTES = 32
