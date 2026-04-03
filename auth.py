@@ -18,7 +18,7 @@ from security import (
     generate_customer_id, compute_record_hmac, verify_record_hmac,
 )
 from validators import validate_username, validate_email, validate_phone, validate_full_name
-
+from hmac_refresh import refresh_user_hmac
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -53,8 +53,6 @@ def _get_user_by_id(user_id: int) -> Optional[dict]:
         cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         row = cur.fetchone()
     return dict(row) if row else None
-
-
 
 
 
