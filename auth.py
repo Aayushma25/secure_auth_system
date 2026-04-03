@@ -214,7 +214,101 @@ def register_customer(
 
 
 
+def register_employee(
+    username: str,
+    password: str,
+    full_name: str,
+    email: str,
+    phone: str,
+    department: str,
+    job_title: str,
+    access_level: str = "standard",
+) -> tuple[bool, str]:
+    """
+    Create a new employee account.
+    Employee ID is auto-generated.
+    """
+    from validators import validate_department, validate_job_title
 
+    for field, val, fn in [
+        ("username", username, validate_username),
+        ("full name", full_name, validate_full_name),
+        ("email", email, validate_email),
+        ("phone", phone, validate_phone),
+        ("department", department, validate_department),
+        ("job title", job_title, validate_job_title),
+    ]:
+        ok, msg = fn(val)
+        if not ok:
+            return False, msg
+
+    ok, msg = validate_password_strength(password)
+    if not ok:
+        return False, msg
+
+    if _get_user_by_username(username):
+        return False, "Registration failed. Please choose a different username."
+
+    valid_levels = {"standard", "senior", "manager", "admin"}
+    if access_level not in valid_levels:
+        access_level = "standard"
+
+    now = time.time()
+    pw_hash = hash_password(password)
+    employee_id = "EMP-" + secrets.token_hex(6).upper()
+
+    user_record = {
+        "username": username.lower(),
+        "password_hash": pw_hash,
+        "role": "employee",
+        "created_at": now,
+    }
+    user_mac = compute_record_hmac(user_record)
+
+    try:
+        with db_cursor() as cur:
+            cur.execute("""
+                INSERT INTO users
+                    (username, password_hash, role, totp_secret, mfa_enabled,
+                     is_locked, failed_attempts, locked_until, last_login, created_at, hmac)
+                VALUES (?, ?, 'employee', NULL, 0, 0, 0, NULL, NULL, ?, '')
+            """, (username.lower(), pw_hash, now))
+            user_id = cur.lastrowid
+
+            emp_record = {
+                "user_id": user_id, "employee_id": employee_id,
+                "full_name": full_name.strip(), "email": email.strip().lower(),
+                "phone": phone.strip(), "department": department,
+                "job_title": job_title.strip(), "access_level": access_level,
+                "created_at": now,
+            }
+            emp_mac = compute_record_hmac(emp_record)
+
+            cur.execute("""
+                INSERT INTO employees
+                    (user_id, employee_id, full_name, email, phone,
+                     department, job_title, access_level, created_at, hmac)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                user_id, employee_id,
+                full_name.strip(), email.strip().lower(), phone.strip(),
+                department, job_title.strip(), access_level, now, emp_mac,
+            ))
+        
+        # Recompute user HMAC from the actual persisted row (all DB columns present)
+        from hmac_refresh import refresh_user_hmac
+        refresh_user_hmac(user_id)
+
+        log_event("ACCOUNT_REGISTER", "success", username=username, user_id=user_id,
+                  detail=f"role=employee department={department}")
+        return True, f"Employee account created. Employee ID: {employee_id}"
+
+    except Exception as exc:
+        if "UNIQUE" in str(exc):
+            return False, "An account with that email or username already exists."
+        log_event("ACCOUNT_REGISTER", "failure", username=username,
+                  detail=f"error={type(exc).__name__}")
+        return False, "Registration failed due to a system error."
 
 
 
