@@ -311,6 +311,46 @@ def register_employee(
         return False, "Registration failed due to a system error."
 
 
+def attempt_login(username: str, password: str) -> tuple[bool, str, Optional[dict]]:
+    """
+    Phase 1 of login: verify username + password.
+    Returns (success, message, user_dict_or_None).
+    If MFA is enabled, caller must follow up with verify_mfa_and_create_session().
+    """
+    user = _get_user_by_username(username)
+
+    if not user:
+        # Deliberately slow path to mitigate timing-based enumeration.
+        # We still hash to consume ~equal CPU time.
+        hash_password("dummy_constant_padding_value_1234!")
+        log_event("AUTH_LOGIN_FAILURE", "failure", username=username,
+                  detail="user_not_found")
+        return False, "Invalid username or password.", None
+
+    locked, lock_msg = _check_lockout(user)
+    if locked:
+        log_event("AUTH_LOGIN_FAILURE", "failure", username=username,
+                  user_id=user["id"], detail="account_locked")
+        return False, lock_msg, None
+
+    if not verify_password(password, user["password_hash"]):
+        _increment_failed_attempts(user["id"])
+        attempts = user["failed_attempts"] + 1
+        remaining = MAX_FAILED_ATTEMPTS - attempts
+        log_event("AUTH_LOGIN_FAILURE", "failure", username=username,
+                  user_id=user["id"], detail=f"bad_password attempt={attempts}")
+        if remaining > 0:
+            return False, f"Invalid username or password. {remaining} attempt(s) remaining.", None
+        else:
+            return False, "Too many failed attempts. Account is now locked.", None
+
+    # Password OK
+    log_event("AUTH_LOGIN_SUCCESS", "success", username=username, user_id=user["id"])
+    return True, "Password verified.", user
+
+
+
+
 
 
 
