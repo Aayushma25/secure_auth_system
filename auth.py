@@ -19,6 +19,7 @@ from security import (
 )
 from validators import validate_username, validate_email, validate_phone, validate_full_name
 from hmac_refresh import refresh_user_hmac
+from audit import log_event
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -106,7 +107,110 @@ def _check_lockout(user: dict) -> tuple[bool, str]:
     return True, f"Account is locked. Try again in {mins} minute(s)."
 
 
+# ---------------------------------------------------------------------------
+# Registration
+# ---------------------------------------------------------------------------
 
+def register_customer(
+    username: str,
+    password: str,
+    full_name: str,
+    email: str,
+    phone: str,
+    address: str = "",
+) -> tuple[bool, str]:
+    """
+    Create a new customer account.
+    Returns (success: bool, message: str).
+    Customer ID is auto-generated and returned in the success message.
+    """
+    # --- Validate all fields ---
+    for field, val, fn in [
+        ("username", username, validate_username),
+        ("full name", full_name, validate_full_name),
+        ("email", email, validate_email),
+        ("phone", phone, validate_phone),
+    ]:
+        ok, msg = fn(val)
+        if not ok:
+            return False, msg
+
+    ok, msg = validate_password_strength(password)
+    if not ok:
+        return False, msg
+
+    # --- Check uniqueness ---
+    existing = _get_user_by_username(username)
+    if existing:
+        # Deliberately vague message to prevent username enumeration
+        return False, "Registration failed. Please choose a different username."
+
+    # --- Persist ---
+    now = time.time()
+    pw_hash = hash_password(password)
+    customer_id = generate_customer_id()
+
+    user_record = {
+        "username": username.lower(),
+        "password_hash": pw_hash,
+        "role": "customer",
+        "totp_secret": None,
+        "mfa_enabled": 0,
+        "is_locked": 0,
+        "failed_attempts": 0,
+        "locked_until": None,
+        "last_login": None,
+        "created_at": now,
+    }
+    user_mac = compute_record_hmac(user_record)
+
+    customer_record_base = {
+        "customer_id": customer_id,
+        "full_name": full_name.strip(),
+        "email": email.strip().lower(),
+        "phone": phone.strip(),
+        "address": address.strip(),
+        "kyc_status": "pending",
+        "created_at": now,
+    }
+
+    try:
+        with db_cursor() as cur:
+            cur.execute("""
+                INSERT INTO users
+                    (username, password_hash, role, totp_secret, mfa_enabled,
+                     is_locked, failed_attempts, locked_until, last_login, created_at, hmac)
+                VALUES (?, ?, 'customer', NULL, 0, 0, 0, NULL, NULL, ?, '')
+            """, (username.lower(), pw_hash, now))
+            user_id = cur.lastrowid
+
+            cust_record = {**customer_record_base, "user_id": user_id}
+            cust_mac = compute_record_hmac(cust_record)
+
+            cur.execute("""
+                INSERT INTO customers
+                    (user_id, customer_id, full_name, email, phone, address, kyc_status, created_at, hmac)
+                VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+            """, (
+                user_id, customer_id,
+                full_name.strip(), email.strip().lower(), phone.strip(),
+                address.strip(), now, cust_mac,
+            ))
+
+        # Recompute user HMAC from the actual persisted row (all DB columns present)
+        from hmac_refresh import refresh_user_hmac
+        refresh_user_hmac(user_id)
+
+        log_event("ACCOUNT_REGISTER", "success", username=username, user_id=user_id,
+                  detail=f"role=customer customer_id={customer_id}")
+        return True, f"Account created. Your Customer ID is: {customer_id}"
+
+    except Exception as exc:
+        if "UNIQUE" in str(exc):
+            return False, "An account with that email or username already exists."
+        log_event("ACCOUNT_REGISTER", "failure", username=username,
+                  detail=f"error={type(exc).__name__}")
+        return False, "Registration failed due to a system error. Please try again."
 
 
 
