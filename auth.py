@@ -29,6 +29,31 @@ LOCKOUT_DURATION_SECONDS = 30 * 60   # 30 minutes
 SESSION_TTL_SECONDS = 4 * 60 * 60    # 4 hours
 
 
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+def _hash_token(token: str) -> str:
+    """Store tokens as SHA-256 so a DB breach doesn't expose active sessions."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _get_user_by_username(username: str) -> Optional[dict]:
+    with db_cursor() as cur:
+        cur.execute(
+            "SELECT * FROM users WHERE username = ? COLLATE NOCASE",
+            (username,)
+        )
+        row = cur.fetchone()
+    return dict(row) if row else None
+
+
+def _get_user_by_id(user_id: int) -> Optional[dict]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        row = cur.fetchone()
+    return dict(row) if row else None
+
 
 
 
