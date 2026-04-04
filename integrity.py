@@ -49,8 +49,5 @@ def _verify_table(table: str, id_column: str = "id") -> IntegrityReport:
     return report
 
 
-
-
-
-
+def run_full_integrity_check() -> list[IntegrityReport]:
 
