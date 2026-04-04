@@ -31,6 +31,16 @@ def refresh_customer_hmac(user_id: int) -> None:
         cur.execute("UPDATE customers SET hmac = ? WHERE user_id = ?", (new_mac, user_id))        
 
 
+def refresh_employee_hmac(user_id: int) -> None:
+    """Recompute and store the HMAC for an employees row after mutation."""
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM employees WHERE user_id = ?", (user_id,))
+        row = cur.fetchone()
+        if not row:
+            return
+        record = dict(row)
+        new_mac = compute_record_hmac(record)
+        cur.execute("UPDATE employees SET hmac = ? WHERE user_id = ?", (new_mac, user_id))
 
 
 
@@ -40,5 +50,3 @@ def refresh_customer_hmac(user_id: int) -> None:
 
 
 
-
-        
