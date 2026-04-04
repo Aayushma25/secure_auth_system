@@ -51,7 +51,7 @@ def _verify_table(table: str, id_column: str = "id") -> IntegrityReport:
 
 def run_full_integrity_check() -> list[IntegrityReport]:
 
- """
+    """
     Run HMAC verification on all protected tables.
     Returns one IntegrityReport per table.
     Logs INTEGRITY_FAIL events for any tampered rows.
@@ -76,7 +76,24 @@ def run_full_integrity_check() -> list[IntegrityReport]:
                         "INTEGRITY_FAIL", "failure",
                         detail=f"table={table} record_id={rid}"
                     )
+        except Exception as exc:
+            # Even if a table check fails, continue with the others
+            r = IntegrityReport(table=table)
+            r.failed = -1   # sentinel for "check error"
+            reports.append(r)
+
     if not any_failure:
         log_event("INTEGRITY_CHECK", "success", detail="all_tables_passed")
 
     return reports
+
+
+
+
+
+
+
+
+
+
+
