@@ -116,7 +116,17 @@ def verify_single_user(user_id: int) -> tuple[bool, list[str]]:
             cust = dict(row)
             if not verify_record_hmac(cust):
                 issues.append(f"customers.user_id={user_id} — HMAC mismatch")
+# Check profile row (employee)
+    elif role == "employee":
+        with db_cursor() as cur:
+            cur.execute("SELECT * FROM employees WHERE user_id = ?", (user_id,))
+            row = cur.fetchone()
+        if row:
+            emp = dict(row)
+            if not verify_record_hmac(emp):
+                issues.append(f"employees.user_id={user_id} — HMAC mismatch")
 
+    return len(issues) == 0, issues
 
 
 
