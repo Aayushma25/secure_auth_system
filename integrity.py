@@ -19,6 +19,16 @@ class IntegrityReport:
     failed: int = 0
     failed_ids: list = field(default_factory=list)
 
+    @property
+    def ok(self) -> bool:
+        return self.failed == 0
+
+    def summary(self) -> str:
+        status = "PASS" if self.ok else "FAIL"
+        return (
+            f"Table '{self.table}': {self.total_checked} records checked | "
+            f"{self.passed} passed | {self.failed} failed | Status: {status}"
+        )
 
 
 
@@ -27,5 +37,3 @@ class IntegrityReport:
 
 
 
-
-    
