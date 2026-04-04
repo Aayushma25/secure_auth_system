@@ -96,7 +96,7 @@ def verify_single_user(user_id: int) -> tuple[bool, list[str]]:
     issues = []
 
     # Check users row
-    
+
     with db_cursor() as cur:
         cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         row = cur.fetchone()
@@ -106,7 +106,16 @@ def verify_single_user(user_id: int) -> tuple[bool, list[str]]:
     if not verify_record_hmac(user):
         issues.append(f"users.id={user_id} — HMAC mismatch (record may have been tampered with)")
 
-
+ # Check profile row (customer )
+    role = user.get("role")
+    if role == "customer":
+        with db_cursor() as cur:
+            cur.execute("SELECT * FROM customers WHERE user_id = ?", (user_id,))
+            row = cur.fetchone()
+        if row:
+            cust = dict(row)
+            if not verify_record_hmac(cust):
+                issues.append(f"customers.user_id={user_id} — HMAC mismatch")
 
 
 
