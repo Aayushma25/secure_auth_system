@@ -31,6 +31,23 @@ class IntegrityReport:
         )
 
 
+def _verify_table(table: str, id_column: str = "id") -> IntegrityReport:
+    report = IntegrityReport(table=table)
+    with db_cursor() as cur:
+        cur.execute(f"SELECT * FROM {table}")    # nosec — table name is hardcoded, not user input
+        rows = cur.fetchall()
+
+    for row in rows:
+        record = dict(row)
+        report.total_checked += 1
+        if verify_record_hmac(record):
+            report.passed += 1
+        else:
+            report.failed += 1
+            report.failed_ids.append(record.get(id_column, "?"))
+
+    return report
+
 
 
 
