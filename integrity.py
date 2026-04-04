@@ -88,6 +88,24 @@ def run_full_integrity_check() -> list[IntegrityReport]:
     return reports
 
 
+def verify_single_user(user_id: int) -> tuple[bool, list[str]]:
+    """
+    Verify the integrity of a single user and their profile record.
+    Returns (all_ok: bool, list_of_issues).
+    """
+    issues = []
+
+    # Check users row
+    
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        row = cur.fetchone()
+    if not row:
+        return False, ["User not found."]
+    user = dict(row)
+    if not verify_record_hmac(user):
+        issues.append(f"users.id={user_id} — HMAC mismatch (record may have been tampered with)")
+
 
 
 
