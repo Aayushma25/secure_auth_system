@@ -349,6 +349,58 @@ def attempt_login(username: str, password: str) -> tuple[bool, str, Optional[dic
     return True, "Password verified.", user
 
 
+def verify_mfa_and_create_session(user: dict, totp_code: str) -> tuple[bool, str, Optional[str]]:
+    """
+    Phase 2 of login (when MFA is enabled): verify TOTP then issue session.
+    Returns (success, message, session_token_or_None).
+    """
+    from validators import validate_totp_code
+    ok, msg = validate_totp_code(totp_code)
+    if not ok:
+        return False, msg, None
+
+    if not verify_totp(user["totp_secret"], totp_code):
+        log_event("AUTH_MFA_FAILURE", "failure", username=user["username"],
+                  user_id=user["id"])
+        return False, "Invalid OTP code. Please try again.", None
+
+    token = _create_session(user["id"])
+    _reset_failed_attempts(user["id"])
+    _update_last_login(user["id"])
+    log_event("AUTH_MFA_SUCCESS", "success", username=user["username"],
+              user_id=user["id"])
+    return True, "Login successful.", token
+
+
+def create_session_no_mfa(user: dict) -> str:
+    """Create a session for a user who does not have MFA enabled."""
+    token = _create_session(user["id"])
+    _reset_failed_attempts(user["id"])
+    _update_last_login(user["id"])
+    return token
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
