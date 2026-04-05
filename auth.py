@@ -380,7 +380,58 @@ def create_session_no_mfa(user: dict) -> str:
     return token
 
 
+def _create_session(user_id: int) -> str:
+    token = generate_session_token()
+    token_hash = _hash_token(token)
+    expires_at = time.time() + SESSION_TTL_SECONDS
+    with db_cursor() as cur:
+        cur.execute("""
+            INSERT INTO sessions (user_id, token_hash, expires_at, created_at)
+            VALUES (?, ?, ?, ?)
+        """, (user_id, token_hash, expires_at, time.time()))
+    log_event("SESSION_CREATE", "info", user_id=user_id)
+    return token
 
+
+def _update_last_login(user_id: int) -> None:
+    with db_cursor() as cur:
+        cur.execute("UPDATE users SET last_login = ? WHERE id = ?",
+                    (time.time(), user_id))
+    refresh_user_hmac(user_id)
+
+
+def validate_session(token: str) -> Optional[dict]:
+    """
+    Validate a session token.  Returns the user dict if valid, else None.
+    Expired sessions are automatically deleted.
+    """
+    token_hash = _hash_token(token)
+    now = time.time()
+    with db_cursor() as cur:
+        cur.execute("""
+            SELECT s.user_id, s.expires_at
+            FROM sessions s
+            WHERE s.token_hash = ?
+        """, (token_hash,))
+        row = cur.fetchone()
+
+    if not row:
+        return None
+    if row["expires_at"] < now:
+        # Expired — clean up
+        with db_cursor() as cur:
+            cur.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+        log_event("SESSION_EXPIRE", "info", user_id=row["user_id"])
+        return None
+
+    return _get_user_by_id(row["user_id"])
+
+
+def logout(token: str, username: str) -> None:
+    token_hash = _hash_token(token)
+    with db_cursor() as cur:
+        cur.execute("DELETE FROM sessions WHERE token_hash = ?", (token_hash,))
+    log_event("AUTH_LOGOUT", "success", username=username)
 
 
 
