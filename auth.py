@@ -434,6 +434,50 @@ def logout(token: str, username: str) -> None:
     log_event("AUTH_LOGOUT", "success", username=username)
 
 
+# ---------------------------------------------------------------------------
+# MFA enrolment
+# ---------------------------------------------------------------------------
+
+def enroll_mfa(user_id: int) -> tuple[str, str]:
+    """
+    Generate and store a new TOTP secret.
+    Returns (secret_b32, otpauth_uri) for display / QR code.
+    The caller must confirm with a valid TOTP before enabling MFA.
+    """
+    secret = generate_totp_secret()
+    with db_cursor() as cur:
+        # Store secret but do NOT yet set mfa_enabled = 1
+        cur.execute("UPDATE users SET totp_secret = ? WHERE id = ?", (secret, user_id))
+        cur.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+        row = cur.fetchone()
+    username = row["username"] if row else "unknown"
+    from security import get_totp_uri
+    uri = get_totp_uri(secret, username)
+    return secret, uri
+
+
+def confirm_mfa_enrollment(user_id: int, totp_code: str) -> tuple[bool, str]:
+    """
+    Enable MFA after the user has confirmed they can generate valid codes.
+    """
+    with db_cursor() as cur:
+        cur.execute("SELECT totp_secret, username FROM users WHERE id = ?", (user_id,))
+        row = cur.fetchone()
+    if not row or not row["totp_secret"]:
+        return False, "No MFA secret found. Please restart enrolment."
+
+    if not verify_totp(row["totp_secret"], totp_code):
+        log_event("AUTH_MFA_ENROLL", "failure", username=row["username"], user_id=user_id)
+        return False, "OTP code incorrect. Enrolment not confirmed."
+
+    with db_cursor() as cur:
+        cur.execute("UPDATE users SET mfa_enabled = 1 WHERE id = ?", (user_id,))
+    refresh_user_hmac(user_id)
+    log_event("AUTH_MFA_ENROLL", "success", username=row["username"], user_id=user_id)
+    return True, "MFA has been enabled on your account."
+
+
+
 
 
 
