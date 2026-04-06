@@ -479,6 +479,45 @@ def confirm_mfa_enrollment(user_id: int, totp_code: str) -> tuple[bool, str]:
 
 
 
+# ---------------------------------------------------------------------------
+# Password change
+# ---------------------------------------------------------------------------
+
+def change_password(
+    user_id: int,
+    current_password: str,
+    new_password: str,
+) -> tuple[bool, str]:
+    user = _get_user_by_id(user_id)
+    if not user:
+        return False, "User not found."
+
+    if not verify_password(current_password, user["password_hash"]):
+        log_event("PASSWORD_CHANGE", "failure", username=user["username"], user_id=user_id,
+                  detail="bad_current_password")
+        return False, "Current password is incorrect."
+
+    ok, msg = validate_password_strength(new_password)
+    if not ok:
+        return False, msg
+
+    if verify_password(new_password, user["password_hash"]):
+        return False, "New password must differ from the current password."
+
+    new_hash = hash_password(new_password)
+    with db_cursor() as cur:
+        cur.execute("UPDATE users SET password_hash = ? WHERE id = ?",
+                    (new_hash, user_id))
+    refresh_user_hmac(user_id)
+    # Invalidate all existing sessions for this user
+    with db_cursor() as cur:
+        cur.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+
+    log_event("PASSWORD_CHANGE", "success", username=user["username"], user_id=user_id)
+    return True, "Password changed successfully. All sessions have been invalidated."
+
+
+
 
 
 
