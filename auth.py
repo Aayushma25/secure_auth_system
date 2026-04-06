@@ -518,6 +518,35 @@ def change_password(
 
 
 
+# ---------------------------------------------------------------------------
+# Profile retrieval
+# ---------------------------------------------------------------------------
+
+def get_customer_profile(user_id: int) -> Optional[dict]:
+    with db_cursor() as cur:
+        cur.execute("""
+            SELECT c.*, u.username, u.last_login, u.mfa_enabled, u.created_at as reg_date
+            FROM customers c
+            JOIN users u ON u.id = c.user_id
+            WHERE c.user_id = ?
+        """, (user_id,))
+        row = cur.fetchone()
+    return dict(row) if row else None
+
+
+def get_employee_profile(user_id: int) -> Optional[dict]:
+    with db_cursor() as cur:
+        cur.execute("""
+            SELECT e.*, u.username, u.last_login, u.mfa_enabled, u.created_at as reg_date
+            FROM employees e
+            JOIN users u ON u.id = e.user_id
+            WHERE e.user_id = ?
+        """, (user_id,))
+        row = cur.fetchone()
+    return dict(row) if row else None
+
+
+
 
 
 
