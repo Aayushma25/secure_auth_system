@@ -8,6 +8,10 @@ from typing import Optional
 
 from database import db_cursor
 
+from security import (
+    generate_recovery_token, RECOVERY_TTL_SECONDS,
+)
+
 from audit import log_event
 
 MAX_PENDING_TOKENS = 3
@@ -77,7 +81,29 @@ def request_recovery(email: str) -> tuple[bool, str]:
     
 
 
-    
+    # --- Generate and store token ---
+    token = generate_recovery_token()
+    token_hash = _hash_token(token)
+    expires_at = now + RECOVERY_TTL_SECONDS
+
+    with db_cursor() as cur:
+        cur.execute("""
+            INSERT INTO recovery_tokens (user_id, token_hash, expires_at, used, created_at)
+            VALUES (?, ?, ?, 0, ?)
+        """, (user["id"], token_hash, expires_at, now))
+
+    log_event("RECOVERY_REQUEST", "success", username=user["username"],
+              user_id=user["id"])
+
+    # --- In production: send via email. Here: print to console. ---
+    print("\n" + "=" * 60)
+    print("  [SIMULATED EMAIL — in production this is sent to your inbox]")
+    print(f"  Account:        {user['username']}")
+    print(f"  Recovery Token: {token}")
+    print(f"  Expires in:     60 minutes")
+    print("=" * 60 + "\n")
+
+    return True, generic_msg   
 
 
 
