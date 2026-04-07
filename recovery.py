@@ -159,7 +159,22 @@ def redeem_recovery_token(
         return False, "Invalid email, token, or the token has expired."
 
 
+    # --- All checks passed — reset password ---
+    new_hash = hash_password(new_password)
 
+    with db_cursor() as cur:
+        # Mark token used
+        cur.execute("UPDATE recovery_tokens SET used = 1 WHERE id = ?", (row["id"],))
+        # Update password
+        cur.execute("UPDATE users SET password_hash = ? WHERE id = ?",
+                    (new_hash, user["id"]))
+        # Unlock account (in case it was locked)
+        cur.execute("""
+            UPDATE users SET is_locked = 0, failed_attempts = 0, locked_until = NULL
+            WHERE id = ?
+        """, (user["id"],))
+        # Invalidate all sessions
+        cur.execute("DELETE FROM sessions WHERE user_id = ?", (user["id"],))
 
 
 
