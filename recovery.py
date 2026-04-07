@@ -81,7 +81,7 @@ def request_recovery(email: str) -> tuple[bool, str]:
     
 
 
-    # --- Generate and store token ---
+    # --- Generate and store token -----
     token = generate_recovery_token()
     token_hash = _hash_token(token)
     expires_at = now + RECOVERY_TTL_SECONDS
