@@ -9,7 +9,8 @@ from typing import Optional
 from database import db_cursor
 
 from security import (
-    generate_recovery_token, RECOVERY_TTL_SECONDS,
+    generate_recovery_token, hash_password,
+    validate_password_strength, RECOVERY_TTL_SECONDS,
 )
 
 from audit import log_event
@@ -107,7 +108,31 @@ def request_recovery(email: str) -> tuple[bool, str]:
 
 
 
+def redeem_recovery_token(
+    email: str,
+    token: str,
+    new_password: str,
+) -> tuple[bool, str]:
+    """
+    Validate the recovery token and reset the password.
+    Returns (success, message).
+    """
+    from validators import validate_email
+    ok, msg = validate_email(email)
+    if not ok:
+        return False, msg
 
+    ok, msg = validate_password_strength(new_password)
+    if not ok:
+        return False, msg
+
+    user = _get_user_by_email(email)
+    if not user:
+        log_event("RECOVERY_FAILURE", "failure", detail="email_not_found")
+        return False, "Invalid email, token, or the token has expired."
+
+    token_hash = _hash_token(token.strip())
+    now = time.time()
 
 
 
