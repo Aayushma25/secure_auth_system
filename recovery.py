@@ -8,6 +8,7 @@ from typing import Optional
 
 from database import db_cursor
 
+from audit import log_event
 
 MAX_PENDING_TOKENS = 3
 
@@ -37,6 +38,29 @@ def _get_user_by_email(email: str) -> Optional[dict]:
     return dict(row) if row else None
 
 
+def request_recovery(email: str) -> tuple[bool, str]:
+    """
+    Initiate account recovery for the given email address.
+    Always returns a generic success-sounding message regardless of
+    whether the email is registered — prevents email enumeration.
+    """
+    from validators import validate_email
+    ok, msg = validate_email(email)
+    if not ok:
+        return False, msg
+
+    user = _get_user_by_email(email)
+
+    # --- Generic response to prevent enumeration ---
+    generic_msg = (
+        "If an account is registered with that email, a recovery code has been generated.\n"
+        "Please check the console output (in a real system this would be emailed)."
+    )
+
+    if not user:
+        # Log the attempt but reveal nothing to the caller
+        log_event("RECOVERY_REQUEST", "info", detail=f"email_not_found email_domain={email.split('@')[-1]}")
+        return True, generic_msg
 
 
 
