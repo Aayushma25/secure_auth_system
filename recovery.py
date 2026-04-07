@@ -136,7 +136,27 @@ def redeem_recovery_token(
 
 
 
+    with db_cursor() as cur:
+        cur.execute("""
+            SELECT id, expires_at, used FROM recovery_tokens
+            WHERE user_id = ? AND token_hash = ?
+        """, (user["id"], token_hash))
+        row = cur.fetchone()
 
+    if not row:
+        log_event("RECOVERY_FAILURE", "failure", username=user["username"],
+                  user_id=user["id"], detail="token_not_found")
+        return False, "Invalid email, token, or the token has expired."
+
+    if row["used"]:
+        log_event("RECOVERY_FAILURE", "failure", username=user["username"],
+                  user_id=user["id"], detail="token_already_used")
+        return False, "This recovery token has already been used."
+
+    if row["expires_at"] < now:
+        log_event("RECOVERY_FAILURE", "failure", username=user["username"],
+                  user_id=user["id"], detail="token_expired")
+        return False, "Invalid email, token, or the token has expired."
 
 
 
