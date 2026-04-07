@@ -62,6 +62,22 @@ def request_recovery(email: str) -> tuple[bool, str]:
         log_event("RECOVERY_REQUEST", "info", detail=f"email_not_found email_domain={email.split('@')[-1]}")
         return True, generic_msg
 
+     # --- Rate-limit: max 3 pending tokens ---
+    now = time.time()
+    with db_cursor() as cur:
+        cur.execute("""
+            SELECT COUNT(*) as cnt FROM recovery_tokens
+            WHERE user_id = ? AND used = 0 AND expires_at > ?
+        """, (user["id"], now))
+        row = cur.fetchone()
+    if row and row["cnt"] >= MAX_PENDING_TOKENS:
+        log_event("RECOVERY_REQUEST", "failure", username=user["username"],
+                  user_id=user["id"], detail="rate_limited")
+        return True, generic_msg  # still return generic message
+    
+
+
+    
 
 
 
