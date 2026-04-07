@@ -178,6 +178,16 @@ def redeem_recovery_token(
 
 
 
+    # Refresh HMAC after user row mutations
+    from hmac_refresh import refresh_user_hmac
+    refresh_user_hmac(user["id"])
+
+    log_event("RECOVERY_SUCCESS", "success", username=user["username"],
+              user_id=user["id"])
+    return True, "Password reset successful. All previous sessions have been invalidated."
+
+
+
 
 
 
