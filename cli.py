@@ -67,6 +67,21 @@ def separator() -> None:
 
 
 
+def prompt(label: str, required: bool = True) -> str:
+    while True:
+        val = input(f"  {Fore.WHITE}{label}{Style.RESET_ALL}: ").strip()
+        if val or not required:
+            return val
+        error("This field is required.")
+
+
+def prompt_password(label: str = "Password") -> str:
+    while True:
+        val = getpass.getpass(f"  {label}: ")
+        if val:
+            return val
+        error("Password cannot be empty.")
+
 
 
 
