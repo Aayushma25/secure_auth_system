@@ -83,6 +83,33 @@ def prompt_password(label: str = "Password") -> str:
         error("Password cannot be empty.")
 
 
+def pick_from_menu(title: str, options: list[str]) -> int:
+    """
+    Show a numbered menu and return the 0-based index of the chosen option.
+    """
+    print(f"\n{Fore.CYAN}  {title}{Style.RESET_ALL}")
+    for i, opt in enumerate(options, 1):
+        print(f"    {Fore.WHITE}[{i}]{Style.RESET_ALL} {opt}")
+    print()
+    while True:
+        raw = input("  Your choice: ").strip()
+        if raw.isdigit():
+            idx = int(raw) - 1
+            if 0 <= idx < len(options):
+                return idx
+        error(f"Please enter a number between 1 and {len(options)}.")
+
+
+def prompt_validated(label: str, validator, required: bool = True) -> str:
+    """Repeatedly prompt until validator returns ok=True."""
+    while True:
+        val = prompt(label, required=required)
+        if not val and not required:
+            return val
+        ok, msg = validator(val)
+        if ok:
+            return val
+        error(msg)
 
 
 
