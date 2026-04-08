@@ -55,6 +55,16 @@ def warn(msg: str) -> None:
     print(f"\n{Fore.YELLOW}  ⚠️  {msg}{Style.RESET_ALL}\n")
 
 
+def header(title: str) -> None:
+    width = 60
+    print(f"\n{Fore.CYAN}{'─' * width}")
+    print(f"  {title}")
+    print(f"{'─' * width}{Style.RESET_ALL}\n")
+
+
+def separator() -> None:
+    print(Fore.YELLOW + "  " + "─" * 58 + Style.RESET_ALL)
+
 
 
 
