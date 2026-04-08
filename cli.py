@@ -22,7 +22,22 @@ except ImportError:
     Fore = Style = _NoColor()
 
 
+# ---------------------------------------------------------------------------
+# Display helpers
+# ---------------------------------------------------------------------------
 
+BANNER = r"""
+       Secure Authentication System  |  FinTech Edition
+"""
+
+
+def clr() -> None:
+    os.system("cls" if os.name == "nt" else "clear")
+
+
+def print_banner() -> None:
+    print(Fore.CYAN + BANNER + Style.RESET_ALL)
+    print(Fore.YELLOW + "  " + "─" * 58 + Style.RESET_ALL)
 
 
 
