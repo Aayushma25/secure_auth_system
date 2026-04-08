@@ -39,7 +39,20 @@ def print_banner() -> None:
     print(Fore.CYAN + BANNER + Style.RESET_ALL)
     print(Fore.YELLOW + "  " + "─" * 58 + Style.RESET_ALL)
 
+def success(msg: str) -> None:
+    print(f"\n{Fore.GREEN}  ✔️  {msg}{Style.RESET_ALL}\n")
 
+
+def error(msg: str) -> None:
+    print(f"\n{Fore.RED}  ✖️  {msg}{Style.RESET_ALL}\n")
+
+
+def info(msg: str) -> None:
+    print(f"\n{Fore.CYAN}  ℹ️  {msg}{Style.RESET_ALL}\n")
+
+
+def warn(msg: str) -> None:
+    print(f"\n{Fore.YELLOW}  ⚠️  {msg}{Style.RESET_ALL}\n")
 
 
 
