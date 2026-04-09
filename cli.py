@@ -66,7 +66,6 @@ def separator() -> None:
     print(Fore.YELLOW + "  " + "─" * 58 + Style.RESET_ALL)
 
 
-
 def prompt(label: str, required: bool = True) -> str:
     while True:
         val = input(f"  {Fore.WHITE}{label}{Style.RESET_ALL}: ").strip()
@@ -124,6 +123,20 @@ def select_role() -> str:
     idx = pick_from_menu("Select your role:", ROLES)
     return ROLES[idx].lower()
 
+
+
+# ---------------------------------------------------------------------------
+# Registration flows
+# ---------------------------------------------------------------------------
+
+def registration_flow() -> None:
+    header("New Account Registration")
+    role = select_role()
+
+    if role == "customer":
+        _register_customer_flow()
+    else:
+        _register_employee_flow()
 
 
 
