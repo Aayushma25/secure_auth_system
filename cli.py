@@ -112,6 +112,18 @@ def prompt_validated(label: str, validator, required: bool = True) -> str:
         error(msg)
 
 
+# ---------------------------------------------------------------------------
+# Role selection
+# ---------------------------------------------------------------------------
+
+ROLES = ["Customer", "Employee"]
+
+
+def select_role() -> str:
+    """Show dropdown-style role picker. Returns 'customer' or 'employee'."""
+    idx = pick_from_menu("Select your role:", ROLES)
+    return ROLES[idx].lower()
+
 
 
 
