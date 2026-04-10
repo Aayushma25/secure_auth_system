@@ -236,7 +236,54 @@ def _register_employee_flow() -> None:
 
 
 
+# ---------------------------------------------------------------------------
+# Login flow
+# ---------------------------------------------------------------------------
 
+def login_flow() -> None:
+    header("Login")
+    role = select_role()
+
+    username = prompt("Username")
+    password = prompt_password("Password")
+
+    info("Verifying credentials…")
+    ok, msg, user = auth.attempt_login(username, password)
+
+    if not ok:
+        error(msg)
+        return
+
+    if not user or user.get("role") != role:
+        error("Username or password is incorrect, or role mismatch.")
+        return
+
+    # --- MFA check ---
+    session_token: Optional[str] = None
+
+    if user.get("mfa_enabled"):
+        print(f"\n  {Fore.CYAN}Two-Factor Authentication Required{Style.RESET_ALL}")
+        info("Open your authenticator app and enter the 6-digit code.")
+        for attempt in range(3):
+            code = prompt("  Enter OTP code")
+            mfa_ok, mfa_msg, token = auth.verify_mfa_and_create_session(user, code)
+            if mfa_ok:
+                session_token = token
+                break
+            error(mfa_msg)
+            if attempt == 2:
+                error("Too many incorrect OTP attempts.")
+                return
+    else:
+        session_token = auth.create_session_no_mfa(user)
+        warn("MFA is not enabled on your account. We strongly recommend enabling it.")
+
+    success(f"Welcome, {username}! Login successful.")
+
+    if user["role"] == "customer":
+        customer_dashboard(user, session_token)
+    else:
+        employee_dashboard(user, session_token)
 
 
 
