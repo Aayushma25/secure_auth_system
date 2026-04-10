@@ -185,6 +185,52 @@ def _register_customer_flow() -> None:
         error(msg)
 
 
+def _register_employee_flow() -> None:
+    header("Employee Registration")
+    print("  Please provide your employee details.\n")
+
+    username = prompt_validated("Username", validate_username)
+    full_name = prompt_validated("Full Name", validate_full_name)
+    email = prompt_validated("Work Email", validate_email)
+    phone = prompt_validated("Phone Number", validate_phone)
+
+    departments = [
+        "Engineering", "Finance", "Compliance", "Risk",
+        "Operations", "Customer Support", "Product", "HR",
+        "Legal", "Marketing", "Executive",
+    ]
+    dept_idx = pick_from_menu("Select Department:", departments)
+    department = departments[dept_idx]
+
+    job_title = prompt_validated("Job Title", validate_job_title)
+
+    access_levels = ["standard", "senior", "manager", "admin"]
+    lvl_idx = pick_from_menu("Access Level:", [l.title() for l in access_levels])
+    access_level = access_levels[lvl_idx]
+
+    print(f"\n  {Fore.CYAN}Choose a strong password.{Style.RESET_ALL}")
+    print("  Requirements: 12+ chars, uppercase, lowercase, digit, special char.\n")
+    while True:
+        password = prompt_password("Password")
+        ok, msg = validate_password_strength(password)
+        if not ok:
+            error(msg)
+            continue
+        confirm = prompt_password("Confirm Password")
+        if password != confirm:
+            error("Passwords do not match.")
+            continue
+        break
+
+    info("Creating employee account…")
+    ok, msg = auth.register_employee(
+        username, password, full_name, email, phone,
+        department, job_title, access_level,
+    )
+    if ok:
+        success(msg)
+    else:
+        error(msg)
 
 
 
