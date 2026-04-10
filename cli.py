@@ -22,6 +22,19 @@ except ImportError:
     Fore = Style = _NoColor()
 
 
+import auth
+import recovery
+import integrity
+import audit
+from database import init_db
+from validators import (
+    validate_username, validate_email, validate_phone,
+    validate_full_name, validate_department, validate_job_title,
+)
+from security import validate_password_strength
+
+
+
 # ---------------------------------------------------------------------------
 # Display helpers
 # ---------------------------------------------------------------------------
@@ -139,7 +152,37 @@ def registration_flow() -> None:
         _register_employee_flow()
 
 
+def _register_customer_flow() -> None:
+    header("Customer Registration")
+    print("  Please provide the following details.\n")
 
+    username = prompt_validated("Username (3-30 chars, starts with a letter)", validate_username)
+    full_name = prompt_validated("Full Name", validate_full_name)
+    email = prompt_validated("Email Address", validate_email)
+    phone = prompt_validated("Phone Number (with country code, e.g. +977-9812345678)", validate_phone)
+    address = prompt("Home Address (optional)", required=False)
+
+    print(f"\n  {Fore.CYAN}Choose a strong password.{Style.RESET_ALL}")
+    print("  Requirements: 12+ chars, uppercase, lowercase, digit, special char.\n")
+    while True:
+        password = prompt_password("Password")
+        ok, msg = validate_password_strength(password)
+        if not ok:
+            error(msg)
+            continue
+        confirm = prompt_password("Confirm Password")
+        if password != confirm:
+            error("Passwords do not match. Please try again.")
+            continue
+        break
+
+    info("Creating your account…")
+    ok, msg = auth.register_customer(username, password, full_name, email, phone, address)
+    if ok:
+        success(msg)
+        info("You can now log in. We recommend enabling MFA after your first login.")
+    else:
+        error(msg)
 
 
 
