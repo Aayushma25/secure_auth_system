@@ -428,6 +428,132 @@ def _show_employee_profile(user_id: int) -> None:
 
 
 
+# ---------------------------------------------------------------------------
+# Shared dashboard actions
+# ---------------------------------------------------------------------------
+
+def _mfa_menu(user: dict, session_token: str) -> None:
+    header("Multi-Factor Authentication (TOTP)")
+
+    if user.get("mfa_enabled"):
+        info("MFA is currently ENABLED on your account.")
+        info("To re-enrol (e.g. new phone), contact support.")
+        return
+
+    warn("MFA is currently DISABLED. Enabling it significantly improves security.")
+    choice = pick_from_menu("Would you like to enable MFA now?", ["Yes — enable MFA", "No — go back"])
+    if choice == 1:
+        return
+
+    secret, uri = auth.enroll_mfa(user["id"])
+
+    print(f"\n  {Fore.CYAN}Your TOTP Secret (for manual entry):{Style.RESET_ALL}")
+    print(f"  {Fore.WHITE}{secret}{Style.RESET_ALL}\n")
+    print(f"  {Fore.CYAN}OTPAuth URI (copy into any TOTP app):{Style.RESET_ALL}")
+    print(f"  {uri}\n")
+    print("  Add the secret to Google Authenticator, Authy, 1Password, etc.")
+    print("  Then enter the 6-digit code below to confirm and activate MFA.\n")
+
+    for attempt in range(3):
+        code = prompt("  Verification OTP code")
+        ok, msg = auth.confirm_mfa_enrollment(user["id"], code)
+        if ok:
+            success(msg)
+            user["mfa_enabled"] = 1
+            return
+        error(msg)
+
+    error("MFA enrolment failed. Please try again from the menu.")
+
+
+def _change_password_flow(user: dict) -> None:
+    header("Change Password")
+    current = prompt_password("Current Password")
+    print()
+    print("  New password requirements: 12+ chars, upper, lower, digit, special.\n")
+    while True:
+        new_pw = prompt_password("New Password")
+        ok, msg = validate_password_strength(new_pw)
+        if not ok:
+            error(msg)
+            continue
+        confirm = prompt_password("Confirm New Password")
+        if new_pw != confirm:
+            error("Passwords do not match.")
+            continue
+        break
+
+    ok, msg = auth.change_password(user["id"], current, new_pw)
+    if ok:
+        success(msg)
+    else:
+        error(msg)
+
+
+def _show_user_activity(username: str) -> None:
+    header(f"Activity Log — {username}")
+    events = audit.get_user_events(username, limit=15)
+    if not events:
+        info("No activity found.")
+        return
+    print(f"  {'Time':<22} {'Event':<30} {'Outcome':<10} Details")
+    print("  " + "─" * 78)
+    for ev in events:
+        ts = _fmt_ts(ev.get("timestamp"))
+        et = (ev.get("event_type") or "")[:28]
+        oc = ev.get("outcome", "")
+        oc_color = Fore.GREEN if oc == "success" else (Fore.RED if oc == "failure" else Fore.CYAN)
+        detail = (ev.get("detail") or "")[:30]
+        print(f"  {ts:<22} {et:<30} {oc_color}{oc:<10}{Style.RESET_ALL} {detail}")
+
+
+def _run_self_integrity_check(user_id: int) -> None:
+    header("Record Integrity Check")
+    info("Verifying HMAC signatures on your records…")
+    ok, issues = integrity.verify_single_user(user_id)
+    if ok:
+        success("All your records passed integrity verification. No tampering detected.")
+    else:
+        error("Integrity issues detected!")
+        for issue in issues:
+            print(f"  {Fore.RED}  • {issue}{Style.RESET_ALL}")
+
+
+def _run_full_integrity_check() -> None:
+    header("Full Database Integrity Check")
+    info("Scanning all tables… (this may take a moment)")
+    reports = integrity.run_full_integrity_check()
+    for r in reports:
+        color = Fore.GREEN if r.ok else Fore.RED
+        print(f"\n  {color}{r.summary()}{Style.RESET_ALL}")
+        if r.failed_ids:
+            print(f"  {Fore.RED}  Tampered record IDs: {r.failed_ids}{Style.RESET_ALL}")
+
+
+def _show_audit_trail() -> None:
+    header("Recent Audit Trail (last 20 events)")
+    events = audit.get_recent_events(limit=20)
+    if not events:
+        info("No audit events found.")
+        return
+    print(f"  {'ID':<6} {'Time':<22} {'Event':<30} {'User':<16} {'Outcome'}")
+    print("  " + "─" * 90)
+    for ev in events:
+        ts = _fmt_ts(ev.get("timestamp"))
+        et = (ev.get("event_type") or "")[:28]
+        u = (ev.get("username") or "—")[:14]
+        oc = ev.get("outcome", "")
+        oc_color = Fore.GREEN if oc == "success" else (Fore.RED if oc == "failure" else Fore.CYAN)
+        eid = ev.get("id", "")
+        print(f"  {eid:<6} {ts:<22} {et:<30} {u:<16} {oc_color}{oc}{Style.RESET_ALL}")
+
+    # Check audit log integrity
+    checked, tampered = audit.verify_audit_integrity(limit=20)
+    print()
+    if tampered:
+        warn(f"⚠️  {tampered} audit record(s) failed HMAC verification!")
+    else:
+        info(f"Audit log HMAC integrity: {checked} records verified, none tampered.")
 
 
 
