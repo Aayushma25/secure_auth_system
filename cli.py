@@ -287,6 +287,12 @@ def login_flow() -> None:
 
 
 
+
+
+
+
+
+
 # ---------------------------------------------------------------------------
 # Customer dashboard
 # ---------------------------------------------------------------------------
@@ -348,6 +354,75 @@ def _show_customer_profile(user_id: int) -> None:
 
 
 
+
+
+
+
+
+
+
+# ---------------------------------------------------------------------------
+# Employee dashboard
+# ---------------------------------------------------------------------------
+
+def employee_dashboard(user: dict, session_token: str) -> None:
+    while True:
+        clr()
+        print_banner()
+        header(f"Employee Dashboard  —  {user['username'].upper()}")
+
+        options = [
+            "View My Profile",
+            "Enable / Manage MFA",
+            "Change Password",
+            "View My Activity Log",
+            "Run Full Integrity Check (admin-level)",
+            "View Recent Audit Trail",
+            "Logout",
+        ]
+        idx = pick_from_menu("What would you like to do?", options)
+
+        if idx == 0:
+            _show_employee_profile(user["id"])
+        elif idx == 1:
+            _mfa_menu(user, session_token)
+        elif idx == 2:
+            _change_password_flow(user)
+        elif idx == 3:
+            _show_user_activity(user["username"])
+        elif idx == 4:
+            _run_full_integrity_check()
+        elif idx == 5:
+            _show_audit_trail()
+        elif idx == 6:
+            auth.logout(session_token, user["username"])
+            success("You have been logged out.")
+            break
+
+        if idx != 6:
+            input(f"\n  {Fore.YELLOW}Press Enter to return to the dashboard…{Style.RESET_ALL}")
+
+
+def _show_employee_profile(user_id: int) -> None:
+    header("My Profile")
+    profile = auth.get_employee_profile(user_id)
+    if not profile:
+        error("Could not load profile.")
+        return
+    fields = [
+        ("Employee ID",  profile.get("employee_id", "—")),
+        ("Full Name",    profile.get("full_name", "—")),
+        ("Email",        profile.get("email", "—")),
+        ("Phone",        profile.get("phone", "—")),
+        ("Department",   profile.get("department", "—")),
+        ("Job Title",    profile.get("job_title", "—")),
+        ("Access Level", profile.get("access_level", "—").upper()),
+        ("MFA Enabled",  "Yes" if profile.get("mfa_enabled") else "No"),
+        ("Joined",       _fmt_ts(profile.get("reg_date"))),
+        ("Last Login",   _fmt_ts(profile.get("last_login"))),
+    ]
+    for label, value in fields:
+        print(f"  {Fore.CYAN}{label:<16}{Style.RESET_ALL}  {value}")
 
 
 
