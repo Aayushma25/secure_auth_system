@@ -287,7 +287,64 @@ def login_flow() -> None:
 
 
 
+# ---------------------------------------------------------------------------
+# Customer dashboard
+# ---------------------------------------------------------------------------
 
+def customer_dashboard(user: dict, session_token: str) -> None:
+    while True:
+        clr()
+        print_banner()
+        header(f"Customer Dashboard  —  {user['username'].upper()}")
+
+        options = [
+            "View My Profile",
+            "Enable / Manage MFA",
+            "Change Password",
+            "View My Activity Log",
+            "Run Integrity Check (my records)",
+            "Logout",
+        ]
+        idx = pick_from_menu("What would you like to do?", options)
+
+        if idx == 0:   # View profile
+            _show_customer_profile(user["id"])
+        elif idx == 1: # MFA
+            _mfa_menu(user, session_token)
+        elif idx == 2: # Change password
+            _change_password_flow(user)
+        elif idx == 3: # Activity log
+            _show_user_activity(user["username"])
+        elif idx == 4: # Integrity check
+            _run_self_integrity_check(user["id"])
+        elif idx == 5: # Logout
+            auth.logout(session_token, user["username"])
+            success("You have been logged out.")
+            break
+
+        if idx != 5:
+            input(f"\n  {Fore.YELLOW}Press Enter to return to the dashboard…{Style.RESET_ALL}")
+
+
+def _show_customer_profile(user_id: int) -> None:
+    header("My Profile")
+    profile = auth.get_customer_profile(user_id)
+    if not profile:
+        error("Could not load profile.")
+        return
+    fields = [
+        ("Customer ID",   profile.get("customer_id", "—")),
+        ("Full Name",     profile.get("full_name", "—")),
+        ("Email",         profile.get("email", "—")),
+        ("Phone",         profile.get("phone", "—")),
+        ("Address",       profile.get("address") or "—"),
+        ("KYC Status",    profile.get("kyc_status", "—").upper()),
+        ("MFA Enabled",   "Yes" if profile.get("mfa_enabled") else "No"),
+        ("Member Since",  _fmt_ts(profile.get("reg_date"))),
+        ("Last Login",    _fmt_ts(profile.get("last_login"))),
+    ]
+    for label, value in fields:
+        print(f"  {Fore.CYAN}{label:<16}{Style.RESET_ALL}  {value}")
 
 
 
