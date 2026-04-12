@@ -602,7 +602,18 @@ def recovery_flow() -> None:
 
 
 
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
+def _fmt_ts(ts) -> str:
+    if not ts:
+        return "—"
+    try:
+        import datetime
+        return datetime.datetime.fromtimestamp(float(ts)).strftime("%Y-%m-%d %H:%M:%S")
+    except Exception:
+        return str(ts)
 
 
 
