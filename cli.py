@@ -557,8 +557,48 @@ def _show_audit_trail() -> None:
 
 
 
+#-------------------------    --------------------------  ------------------------------   -------------------------------------  -------------------------------------  --------------------------------------   ------------------------------
 
+# ---------------------------------------------------------------------------
+# Account recovery flow
+# ---------------------------------------------------------------------------
 
+def recovery_flow() -> None:
+    header("Account Recovery")
+    print("  Enter the email address associated with your account.")
+    print("  A recovery token will be generated (and in production, emailed).\n")
+
+    email = prompt_validated("Registered Email Address", validate_email)
+    ok, msg = recovery.request_recovery(email)
+    info(msg)
+
+    choice = pick_from_menu(
+        "Do you have a recovery token?",
+        ["Yes — enter token and set new password", "No — cancel"]
+    )
+    if choice == 1:
+        return
+
+    header("Reset Password")
+    token_val = prompt("Recovery Token (paste here)")
+    print("\n  Choose a new strong password.\n")
+    while True:
+        new_pw = prompt_password("New Password")
+        ok, msg = validate_password_strength(new_pw)
+        if not ok:
+            error(msg)
+            continue
+        confirm = prompt_password("Confirm New Password")
+        if new_pw != confirm:
+            error("Passwords do not match.")
+            continue
+        break
+
+    ok, msg = recovery.redeem_recovery_token(email, token_val, new_pw)
+    if ok:
+        success(msg)
+    else:
+        error(msg)
 
 
 
