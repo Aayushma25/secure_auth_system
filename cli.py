@@ -617,6 +617,40 @@ def _fmt_ts(ts) -> str:
 
 
 
+# ---------------------------------------------------------------------------
+# Main entry point
+# ---------------------------------------------------------------------------
+
+def main_menu() -> None:
+    init_db()
+    while True:
+        clr()
+        print_banner()
+        print(f"  {Fore.CYAN}Secure Financial Authentication System{Style.RESET_ALL}\n")
+
+        options = [
+            "Login",
+            "Register New Account",
+            "Account Recovery (Forgot Password)",
+            "Exit",
+        ]
+        idx = pick_from_menu("Main Menu", options)
+
+        if idx == 0:
+            login_flow()
+        elif idx == 1:
+            registration_flow()
+        elif idx == 2:
+            recovery_flow()
+        elif idx == 3:
+            print(f"\n  {Fore.CYAN}Goodbye. Stay secure!{Style.RESET_ALL}\n")
+            sys.exit(0)
+
+        input(f"\n  {Fore.YELLOW}Press Enter to continue…{Style.RESET_ALL}")
+
+
+
+
 
 
 
