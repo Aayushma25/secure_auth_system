@@ -180,7 +180,7 @@ def _register_customer_flow() -> None:
     ok, msg = auth.register_customer(username, password, full_name, email, phone, address)
     if ok:
         success(msg)
-        info("You can now log in. We recommend enabling MFA after your first login.")
+        info("You can now log in.")
     else:
         error(msg)
 
@@ -191,11 +191,11 @@ def _register_employee_flow() -> None:
 
     username = prompt_validated("Username", validate_username)
     full_name = prompt_validated("Full Name", validate_full_name)
-    email = prompt_validated("Work Email", validate_email)
+    email = prompt_validated("Email Address", validate_email)
     phone = prompt_validated("Phone Number", validate_phone)
 
     departments = [
-        "Engineering", "Finance", "Compliance", "Risk",
+        "Finance", "Compliance",
         "Operations", "Customer Support", "Product", "HR",
         "Legal", "Marketing", "Executive",
     ]
@@ -346,7 +346,7 @@ def _show_customer_profile(user_id: int) -> None:
         ("Address",       profile.get("address") or "—"),
         ("KYC Status",    profile.get("kyc_status", "—").upper()),
         ("MFA Enabled",   "Yes" if profile.get("mfa_enabled") else "No"),
-        ("Member Since",  _fmt_ts(profile.get("reg_date"))),
+        ("Customer Since",  _fmt_ts(profile.get("reg_date"))),
         ("Last Login",    _fmt_ts(profile.get("last_login"))),
     ]
     for label, value in fields:
