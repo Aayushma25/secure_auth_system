@@ -1,0 +1,16 @@
+2026-04-13T11:58:55 | ACCOUNT_REGISTER                    | SUCCESS  | user=john                 | uid=1      | role=employee department=Compliance
+2026-04-13T11:59:34 | AUTH_LOGIN_FAILURE                  | FAILURE  | user=john23               | uid=-      | user_not_found
+2026-04-13T12:00:02 | AUTH_LOGIN_FAILURE                  | FAILURE  | user=john23               | uid=-      | user_not_found
+2026-04-13T12:01:05 | RECOVERY_REQUEST                    | SUCCESS  | user=john                 | uid=1      | 
+2026-04-13T12:05:39 | ACCOUNT_REGISTER                    | SUCCESS  | user=Aaron                | uid=2      | role=employee department=Executive
+2026-04-13T12:06:03 | AUTH_LOGIN_SUCCESS                  | SUCCESS  | user=Aaron                | uid=2      | 
+2026-04-13T12:06:04 | SESSION_CREATE                      | INFO     | user=-                    | uid=2      | 
+2026-04-13T12:07:12 | INTEGRITY_CHECK                     | SUCCESS  | user=-                    | uid=-      | all_tables_passed
+2026-04-13T12:12:39 | AUTH_LOGOUT                         | SUCCESS  | user=aaron                | uid=-      | 
+2026-04-14T18:59:54 | ACCOUNT_REGISTER                    | SUCCESS  | user=Amy                  | uid=3      | role=customer customer_id=CUS-6ABE6582BDDC
+2026-04-14T19:00:19 | AUTH_LOGIN_SUCCESS                  | SUCCESS  | user=Amy                  | uid=3      | 
+2026-04-14T19:00:19 | SESSION_CREATE                      | INFO     | user=-                    | uid=3      | 
+2026-04-14T19:02:26 | PASSWORD_CHANGE                     | SUCCESS  | user=amy                  | uid=3      | 
+2026-04-14T19:02:51 | AUTH_LOGOUT                         | SUCCESS  | user=amy                  | uid=-      | 
+2026-04-14T19:03:26 | RECOVERY_REQUEST                    | SUCCESS  | user=aaron                | uid=2      | 
+2026-04-14T19:06:37 | RECOVERY_SUCCESS                    | SUCCESS  | user=aaron                | uid=2      | 
