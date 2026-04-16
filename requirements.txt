@@ -1,0 +1,41 @@
+
+#Standard Library Modules (built into Python/no installation needed)
+
+hashlib
+hmac
+os
+secrets
+struct
+base64
+json
+time
+sqlite3
+contextlib
+logging
+logging.handlers
+re
+getpass
+sys
+dataclasses
+typing
+urllib.parse
+datetime
+
+
+
+#Third-Party Library ( Requires Installation)
+
+colorama>=0.4.6
+
+
+# Python version Required to Run this CLI-based Application
+Python 3.11+
+
+
+
+
+
+
+
+
+
