@@ -231,6 +231,94 @@ trail.
 ---
 
 
+## Feature Reference
+
+### User Roles
+
+#### Customer
+- Fields: `customer_id` (auto-generated, e.g. `CUS-A3F2891C04B7`),
+  `full_name`, `email`, `phone`, `address`, `kyc_status`
+- KYC status tracks `pending → verified → rejected`
+
+#### Employee
+- Fields: `employee_id` (auto-generated, e.g. `EMP-B1D8F24A9C3E`),
+  `full_name`, `email`, `phone`, `department`, `job_title`, `access_level`
+- Departments: Engineering, Finance, Compliance, Risk, Operations,
+  Customer Support, Product, HR, Legal, Marketing, Executive
+- Access levels: `standard`, `senior`, `manager`, `admin`
+
+### MFA Enrolment
+
+1. Log in → Dashboard → "Enable / Manage MFA"
+2. Copy the Base32 secret or OTPAuth URI into an authenticator app
+3. Enter the 6-digit code to confirm and activate
+
+### Account Recovery
+
+1. Main menu → "Account Recovery"
+2. Enter registered email
+3. Copy the printed token (in production: check inbox)
+4. Enter token + new password
+
+### Integrity Verification
+
+- **Customers:** Dashboard → "Run Integrity Check" verifies your own records
+- **Employees:** Dashboard → "Run Full Integrity Check" verifies all tables
+
+---
+
+
+
+## File Structure
+
+```
+fintech_auth/
+├── main.py          — entry point (Python version check, delegates to cli)
+├── cli.py           — all CLI menus, prompts, dashboards
+├── auth.py          — registration, login, lockout, sessions, MFA, password change
+├── recovery.py      — account recovery (token generation & redemption)
+├── integrity.py     — HMAC verification, tamper detection reports
+├── audit.py         — dual-write audit trail (SQLite + rotating file)
+├── validators.py    — input validation functions (allow-list approach)
+├── security.py      — cryptographic primitives (scrypt, TOTP, tokens, HMAC)
+├── database.py      — SQLite setup, schema creation, context manager
+├── requirements.txt — only colorama
+├── README.md        — this file
+│
+├── fintech_auth.db  — created on first run (SQLite database)
+├── .integrity_key   — HMAC key (created on first run, permissions 0600)
+└── logs/
+    └── audit.log    — rotating audit file log
+```
+
+---
+
+## Database Schema
+
+```sql
+users           — shared auth record for all roles
+customers       — customer profile data
+employees       — employee profile data
+recovery_tokens — time-limited single-use recovery tokens
+sessions        — active session tokens (hashed)
+audit_log       — append-only security event log
+```
+
+All sensitive tables have an `hmac TEXT` column for integrity verification.
+
+---
+
+## Running & Testing
+
+### First run
+
+```bash
+python main.py
+# Choose [2] Register → [1] Customer
+# Follow the prompts
+# Then [1] Login
+```
+
 
 
 
