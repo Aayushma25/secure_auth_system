@@ -123,6 +123,113 @@ to hijack active sessions.
 ---
 
 
+### 5. Account Recovery
+
+Flow:
+1. User provides their registered email address.
+2. A 256-bit recovery token is generated and its SHA-256 hash stored.
+3. The token is "sent" (console output; in production: via email/SES).
+4. User provides the token + new password.
+5. Token validity checks: exists, unused, not expired (1 hour TTL).
+6. Password is reset; token marked used; all sessions invalidated.
+7. Account lockout is cleared.
+
+**Anti-enumeration:** The endpoint always returns a success-sounding
+generic message, regardless of whether the email is registered.
+This prevents attackers from harvesting valid email addresses by
+probing the recovery endpoint.
+
+**Rate limiting:** Max 3 active tokens per user at any time — prevents
+token-flooding DoS against the recovery_tokens table.
+
+**Single-use tokens:** Once redeemed, a token can never be reused,
+even if an attacker intercepts the original token.
+
+---
+
+### 6. HMAC Data Integrity (Tamper Detection)
+
+Every row in `users`, `customers`, `employees`, and `audit_log` has an
+`hmac` column storing `HMAC-SHA256(canonical_json(all_other_fields), key)`.
+
+If anyone edits the database directly (e.g., an insider threat or SQL
+injection bypassing the application layer), the HMAC will not match on
+the next verification pass.
+
+**Key management:** The HMAC key is stored in `.integrity_key` (owner
+read-only, `0600` permissions). In production, this should be in a
+secrets manager (AWS Secrets Manager, HashiCorp Vault, etc.).
+
+**Canonical serialisation:** Fields are JSON-serialised with sorted keys
+to ensure the MAC is deterministic regardless of dict ordering.
+
+---
+
+### 7. SQL Injection Prevention
+
+**Every** SQL statement in this codebase uses parameterised queries:
+
+```python
+# SAFE — parameter passed separately, never interpolated into SQL
+cur.execute("SELECT * FROM users WHERE username = ?", (username,))
+
+# NEVER done — this would be vulnerable
+cur.execute(f"SELECT * FROM users WHERE username = '{username}'")
+```
+
+The SQLite PRAGMA `foreign_keys=ON` is set on every connection.
+
+---
+
+### 8. Input Validation (Allow-list)
+
+All user input is validated before reaching business logic:
+
+| Field       | Rule                                               |
+|-------------|----------------------------------------------------|
+| Username    | `^[a-zA-Z][a-zA-Z0-9_-]{2,29}$`                  |
+| Email       | RFC 5322-simplified regex, max 254 chars           |
+| Phone       | 7–15 digits, E.164-style                           |
+| Full name   | Unicode letters/spaces/hyphens, 2–100 chars        |
+| Password    | 12+ chars, upper+lower+digit+special               |
+| Department  | Exact match against a fixed allow-list             |
+| TOTP code   | `^\d{6}$`                                          |
+
+**Why allow-lists over deny-lists?**
+It is impossible to enumerate all possible malicious inputs.
+Defining exactly what is valid (and rejecting everything else) is
+inherently more robust.
+
+---
+
+### 9. No Sensitive Data in Logs
+
+The audit system is designed so that secrets **never appear in logs**:
+
+- Passwords are never logged — only "bad_password" as an outcome.
+- Session tokens are never logged — only their existence/deletion.
+- Recovery tokens are never logged — only their hash.
+- The `detail` field in audit events contains only safe, generic info.
+
+---
+
+### 10. Audit Trail
+
+Every security-relevant action produces an audit event with:
+- Timestamp (Unix float, UTC)
+- Event type (e.g., `AUTH_LOGIN_SUCCESS`)
+- Username + user ID
+- Outcome (`success` / `failure` / `info`)
+- Detail string (sanitised)
+- HMAC signature
+
+Events are written to **both** the SQLite `audit_log` table and a
+rotating file at `logs/audit.log` (5 MB per file, 10 files retained).
+This dual-write means a DB corruption event doesn't destroy the audit
+trail.
+
+---
+
 
 
 
