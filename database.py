@@ -12,7 +12,7 @@ logger = logging.getLogger("fintech.db")
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "fintech_auth.db")
 
-
+# The functions below provide a simple abstraction layer for database access, ensuring that connections are properly managed and that security-oriented pragmas are set on each connection. The schema creation function defines the necessary tables for users, profiles, sessions, recovery tokens, and audit logs.
 def get_connection() -> sqlite3.Connection:
     """
     Create and open the SQLite database with security-oriented pragmas.
@@ -25,7 +25,7 @@ def get_connection() -> sqlite3.Connection:
     return conn
 
 
-@contextmanager
+@contextmanager # Context manager for database cursor
 def db_cursor():
 
     """Context manager: yields a cursor, commits on success, rolls back on error.

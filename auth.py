@@ -25,21 +25,21 @@ from audit import log_event
 # Constants
 # ---------------------------------------------------------------------------
 
-MAX_FAILED_ATTEMPTS = 5
+MAX_FAILED_ATTEMPTS = 5    # Threshold for failed login attempts before account lockout
 LOCKOUT_DURATION_SECONDS = 30 * 60   # 30 minutes
-SESSION_TTL_SECONDS = 4 * 60 * 60    # 4 hours
+SESSION_TTL_SECONDS = 4 * 60 * 60    # 4 hours session validity 
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def _hash_token(token: str) -> str:
+def _hash_token(token: str) -> str:   # 
     """Store tokens as SHA-256 so a DB breach doesn't expose active sessions."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
-def _get_user_by_username(username: str) -> Optional[dict]:
+def _get_user_by_username(username: str) -> Optional[dict]: # Retrieve a user record by username, case-insensitive. Returns a dict or None if not found. This is used during login and registration to check for existing users.
     with db_cursor() as cur:
         cur.execute(
             "SELECT * FROM users WHERE username = ? COLLATE NOCASE",
@@ -49,7 +49,7 @@ def _get_user_by_username(username: str) -> Optional[dict]:
     return dict(row) if row else None
 
 
-def _get_user_by_id(user_id: int) -> Optional[dict]:
+def _get_user_by_id(user_id: int) -> Optional[dict]: # Retrieve a user record by user ID. Returns a dict or None if not found. This is used for session validation and profile retrieval.
     with db_cursor() as cur:
         cur.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         row = cur.fetchone()
@@ -60,8 +60,10 @@ def _get_user_by_id(user_id: int) -> Optional[dict]:
 # Brute Force Protection
 # ---------------------------------------------------------------------------
 
+# This function increments the failed login attempts counter for a user and locks the account if the maximum number of allowed attempts is exceeded. 
+# It also refreshes the user's HMAC to ensure integrity after updating the failed attempts count or lock status.
 
-def _increment_failed_attempts(user_id: int) -> None:
+def _increment_failed_attempts(user_id: int) -> None:  
     """Increment failed counter; lock the account if threshold is reached."""
     with db_cursor() as cur:
         cur.execute(
@@ -84,7 +86,10 @@ def _increment_failed_attempts(user_id: int) -> None:
         refresh_user_hmac(user_id)  # refresh after failed_attempts increment
 
 
-def _reset_failed_attempts(user_id: int) -> None:
+# Reset the failed login attempts counter and unlock the account. 
+# This is called after a successful login or when a lockout expires.
+
+def _reset_failed_attempts(user_id: int) -> None: 
     with db_cursor() as cur:
         cur.execute(
             "UPDATE users SET failed_attempts = 0, is_locked = 0, locked_until = NULL WHERE id = ?",
@@ -93,7 +98,10 @@ def _reset_failed_attempts(user_id: int) -> None:
     refresh_user_hmac(user_id)
 
 
-def _check_lockout(user: dict) -> tuple[bool, str]:
+# Check if the user's account is currently locked. If it is locked, return (True, message) where message indicates how long until the lock expires. If it is not locked, return (False, ""). 
+# If the lock has expired, this function will automatically reset the failed attempts and unlock the account.
+
+def _check_lockout(user: dict) -> tuple[bool, str]: 
     """Returns (is_locked: bool, message: str)."""
     if not user["is_locked"]:
         return False, ""
@@ -110,6 +118,9 @@ def _check_lockout(user: dict) -> tuple[bool, str]:
 # ---------------------------------------------------------------------------
 # Registration
 # ---------------------------------------------------------------------------
+
+# The following functions implement user registration, login, MFA enrolment, password changes, and profile retrieval.
+#  They use the db_cursor context manager to ensure that database operations are atomic and that connections are properly closed.
 
 def register_customer(
     username: str,
@@ -213,6 +224,7 @@ def register_customer(
         return False, "Registration failed due to a system error. Please try again."
 
 
+# ---------------------------------------------------------------------------
 
 def register_employee(
     username: str,
@@ -230,7 +242,11 @@ def register_employee(
     """
     from validators import validate_department, validate_job_title
 
-    for field, val, fn in [
+    # Validate all fields using the appropriate validators.
+    #  The validators return (bool, message) where bool indicates if the validation passed and message provides feedback on what was wrong if it failed. 
+    # This ensures that all input data meets the required formats and constraints before we attempt to create the account.
+    
+    for field, val, fn in [               
         ("username", username, validate_username),
         ("full name", full_name, validate_full_name),
         ("email", email, validate_email),

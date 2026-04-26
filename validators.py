@@ -76,6 +76,7 @@ def validate_phone(value: str) -> tuple[bool, str]:
         return False, "Phone number contains invalid characters."
     return True, "OK"
 
+# Password strength: at least 8 chars, with upper, lower, digit, and special char
 def validate_full_name(value: str) -> tuple[bool, str]:
     v = (value or "").strip()
     if not v:
@@ -89,6 +90,7 @@ def validate_full_name(value: str) -> tuple[bool, str]:
     return True, "OK"
 
 
+# Customer ID: must match CUS-XXXXXXXXXXXX where X is uppercase hex
 def validate_department(value: str) -> tuple[bool, str]:
     VALID_DEPARTMENTS = {
         "Engineering", "Finance", "Compliance", "Risk",
@@ -103,6 +105,7 @@ def validate_department(value: str) -> tuple[bool, str]:
     return True, "OK"
 
 
+# Job title: 2–80 chars, letters/digits/spaces/hyphens/apostrophes
 def validate_job_title(value: str) -> tuple[bool, str]:
     v = (value or "").strip()
     if not v:
@@ -113,13 +116,15 @@ def validate_job_title(value: str) -> tuple[bool, str]:
         return False, "Job title must be at most 80 characters."
     return True, "OK"
 
-
+# TOTP code: exactly 6 digits (we allow leading zeros, so we treat it as a string rather than an integer)
 def validate_totp_code(value: str) -> tuple[bool, str]:
     v = (value or "").strip()
     if not _TOTP_RE.match(v):
         return False, "OTP code must be exactly 6 digits."
     return True, "OK"
 
+
+# Address is optional, but if provided it must be at most 200 characters and can contain letters, digits, spaces, commas, periods, hyphens, and slashes.
 def validate_address(value: str) -> tuple[bool, str]:
     """Optional field — allow blank, but cap length."""
     v = (value or "").strip()
@@ -133,9 +138,9 @@ def validate_address(value: str) -> tuple[bool, str]:
 # (removes control characters; does NOT escape SQL — use parameterised queries)
 # ---------------------------------------------------------------------------
 
-def sanitise_for_log(value: str, max_len: int = 100) -> str:
+def sanitise_for_log(value: str, max_len: int = 100) -> str:  # Sanitise a string for safe log output
     """Remove non-printable control characters and truncate."""
     if not value:
         return ""
-    cleaned = "".join(c for c in value if c.isprintable())
+    cleaned = "".join(c for c in value if c.isprintable())    # Remove any non-printable characters to prevent log injection attacks, where an attacker might try to insert newlines or other control characters to manipulate the log format. This function ensures that only safe, printable characters are included in the log output.
     return cleaned[:max_len]

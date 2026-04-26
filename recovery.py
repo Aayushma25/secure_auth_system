@@ -15,14 +15,14 @@ from security import (
 
 from audit import log_event
 
-MAX_PENDING_TOKENS = 3
+MAX_PENDING_TOKENS = 3  # Maximum number of active (not used, not expired) recovery tokens allowed per user to prevent abuse
 
-def _hash_token(token: str) -> str:
-    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+def _hash_token(token: str) -> str:    # Hash the recovery token using SHA-256 before storing it in the database. This way, even if the database is compromised, attackers cannot see the plaintext tokens. When redeeming a token, we will hash the provided token and compare it to the stored hash.
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()   # Hashing the token ensures that we never store or log the plaintext token, which is a critical security measure to prevent token leakage and misuse. The hash is a one-way function, so even if an attacker gains read access to the database, they cannot reverse-engineer the original token from the hash.
 
-def _get_user_by_email(email: str) -> Optional[dict]:
+def _get_user_by_email(email: str) -> Optional[dict]:  # Look up a user via their customer or employee email.
     """Look up a user via their customer or employee email."""
-    email_lc = email.strip().lower()
+    email_lc = email.strip().lower()  # Normalize email to lowercase for case-insensitive matching, and strip whitespace. This helps prevent issues where the same email might be entered with different cases or accidental spaces, which could lead to duplicate accounts or failed lookups. By normalizing the email before querying, we ensure consistent behavior and reduce the risk of user confusion or account duplication.
     with db_cursor() as cur:
         # Try customers table first
         cur.execute("""
@@ -40,10 +40,10 @@ def _get_user_by_email(email: str) -> Optional[dict]:
             WHERE e.email = ? COLLATE NOCASE
         """, (email_lc,))
         row = cur.fetchone()
-    return dict(row) if row else None
+    return dict(row) if row else None   # Return the user record as a dict if found, otherwise return None. This function is used during the recovery process to find the user associated with the provided email address. It checks both customers and employees tables since both types of users can have accounts. The email lookup is case-insensitive to improve usability and prevent issues with email case variations.
 
 
-def request_recovery(email: str) -> tuple[bool, str]:
+def request_recovery(email: str) -> tuple[bool, str]:   # This function initiates the account recovery process for a given email address. It validates the email, checks if a user exists with that email, applies rate limiting to prevent abuse, generates a recovery token if appropriate, and logs the event. It always returns a generic success message to prevent email enumeration attacks, where an attacker could use the response to determine if an email is registered in the system or not.
     """
     Initiate account recovery for the given email address.
     Always returns a generic success-sounding message regardless of
@@ -182,9 +182,26 @@ def redeem_recovery_token(
     from hmac_refresh import refresh_user_hmac
     refresh_user_hmac(user["id"])
 
-    log_event("RECOVERY_SUCCESS", "success", username=user["username"],
+    log_event("RECOVERY_SUCCESS", "success", username=user["username"], # Log the successful recovery event with the username and user_id for auditing purposes. This allows us to track when account recoveries occur, which accounts are being recovered, and can help in investigating any potential abuse of the recovery process. The log will include the event type "RECOVERY_SUCCESS", the outcome "success", and details about the user whose account was recovered.
               user_id=user["id"])
     return True, "Password reset successful. All previous sessions have been invalidated."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
