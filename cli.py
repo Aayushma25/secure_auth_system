@@ -38,6 +38,18 @@ from security import validate_password_strength
 # ---------------------------------------------------------------------------
 # Display helpers
 # ---------------------------------------------------------------------------
+# The following functions are utility functions for displaying formatted output in the command-line interface (CLI) of the application. 
+# They use the colorama library to add color and style to the text output, making it more visually appealing and easier to read. 
+# The functions include: 
+# - print_banner: Displays the main banner of the application.
+# - success, error, info, warn: Functions to print messages in different colors based on the type of message (success in green, error in red, info in cyan, warning in yellow).
+# - header: Prints a formatted header for different sections of the CLI.
+# - separator: Prints a separator line.
+# - prompt: Prompts the user for input with a label and handles required fields.
+# - prompt_password: Prompts the user for a password input without echoing it to the console.
+# - pick_from_menu: Displays a numbered menu of options and returns the index of the chosen option.
+# - prompt_validated: Prompts the user for input and validates it using a provided validator function, repeating until valid input is received.
+
 
 BANNER = r"""
        Secure Authentication System  |  FinTech Edition
@@ -131,6 +143,9 @@ def prompt_validated(label: str, validator, required: bool = True) -> str:
 ROLES = ["Customer", "Employee"]
 
 
+# The select_role function displays a dropdown-style menu for the user to select their role (either "Customer" or "Employee") 
+# and returns the selected role in lowercase.
+
 def select_role() -> str:
     """Show dropdown-style role picker. Returns 'customer' or 'employee'."""
     idx = pick_from_menu("Select your role:", ROLES)
@@ -141,6 +156,11 @@ def select_role() -> str:
 # ---------------------------------------------------------------------------
 # Registration flows
 # ---------------------------------------------------------------------------
+
+# The registration_flow function is the main entry point for the user registration process.
+#  It prompts the user to select their role (customer or employee) and then directs them to the appropriate registration flow based on their selection. 
+# The _register_customer_flow and _register_employee_flow functions handle the specific registration steps 
+# for customers and employees, respectively, including collecting user details, validating input, and creating accounts using the auth module.
 
 def registration_flow() -> None:
     header("New Account Registration")
@@ -240,6 +260,13 @@ def _register_employee_flow() -> None:
 # Login flow
 # ---------------------------------------------------------------------------
 
+
+
+
+# The login_flow function manages the user login process, including credential verification and multi-factor authentication (MFA) if enabled.
+# It prompts the user for their username and password, verifies the credentials using the auth module, 
+# and if MFA is enabled for the account, it requires the user to enter a one-time password (OTP) from their authenticator app.
+
 def login_flow() -> None:
     header("Login")
     role = select_role()
@@ -291,11 +318,15 @@ def login_flow() -> None:
 
 
 
-
-
 # ---------------------------------------------------------------------------
 # Customer dashboard
 # ---------------------------------------------------------------------------
+
+
+# The customer_dashboard function provides a menu-driven interface for customers after they log in.
+# It allows customers to view their profile, manage MFA settings, change their password,
+#  view their activity log, run an integrity check on their records, and log out.
+
 
 def customer_dashboard(user: dict, session_token: str) -> None:
     while True:
@@ -332,6 +363,16 @@ def customer_dashboard(user: dict, session_token: str) -> None:
             input(f"\n  {Fore.YELLOW}Press Enter to return to the dashboard…{Style.RESET_ALL}")
 
 
+
+
+
+
+# The _show_customer_profile function retrieves and displays the customer's profile information in a formatted manner.
+# It uses the auth module to get the customer's profile data and then prints out various fields 
+#   such as customer ID, full name, email, phone, address, KYC status, MFA status, registration date, and last login time.
+#  If the profile cannot be loaded, it shows an error message.
+
+
 def _show_customer_profile(user_id: int) -> None:
     header("My Profile")
     profile = auth.get_customer_profile(user_id)
@@ -357,13 +398,15 @@ def _show_customer_profile(user_id: int) -> None:
 
 
 
-
-
-
-
 # ---------------------------------------------------------------------------
 # Employee dashboard
 # ---------------------------------------------------------------------------
+
+
+# The employee_dashboard function provides a menu-driven interface for employees after they log in.
+# It allows employees to view their profile, manage MFA settings, change their password,
+# view their activity log, run a full integrity check on the database (admin-level), view the recent audit trail, and log out.
+
 
 def employee_dashboard(user: dict, session_token: str) -> None:
     while True:
@@ -403,6 +446,13 @@ def employee_dashboard(user: dict, session_token: str) -> None:
             input(f"\n  {Fore.YELLOW}Press Enter to return to the dashboard…{Style.RESET_ALL}")
 
 
+
+# The _show_employee_profile function retrieves and displays the employee's profile information in a formatted manner.
+# It uses the auth module to get the employee's profile data and then prints out various fields 
+#   such as employee ID, full name, email, phone, department, job title, access level, MFA status, registration date, and last login time.
+#  If the profile cannot be loaded, it shows an error message.
+
+
 def _show_employee_profile(user_id: int) -> None:
     header("My Profile")
     profile = auth.get_employee_profile(user_id)
@@ -431,6 +481,12 @@ def _show_employee_profile(user_id: int) -> None:
 # ---------------------------------------------------------------------------
 # Shared dashboard actions
 # ---------------------------------------------------------------------------
+
+
+
+# The following functions are shared actions that can be performed by both customers and employees from their respective dashboards.
+# These include managing MFA settings, changing passwords, viewing activity logs, running integrity checks,
+#  and viewing the audit trail. Each function provides a specific functionality related to account security and user activity monitoring.
 
 def _mfa_menu(user: dict, session_token: str) -> None:
     header("Multi-Factor Authentication (TOTP)")
@@ -563,6 +619,15 @@ def _show_audit_trail() -> None:
 # Account recovery flow
 # ---------------------------------------------------------------------------
 
+
+
+
+# The recovery_flow function manages the account recovery process for users who have forgotten their password.
+# It prompts the user to enter their registered email address, 
+# initiates the recovery process by generating a recovery token,
+#  and then allows the user to enter the token and set a new password if they have the token.
+
+
 def recovery_flow() -> None:
     header("Account Recovery")
     print("  Enter the email address associated with your account.")
@@ -606,6 +671,12 @@ def recovery_flow() -> None:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
+
+# The _fmt_ts function formats a timestamp into a human-readable string format.
+# It takes a timestamp as input and returns a formatted string in the format "YYYY-MM-DD HH:MM:SS".
+# If the input timestamp is None or invalid, it returns a placeholder "—" or the original value as a string.
+
 def _fmt_ts(ts) -> str:
     if not ts:
         return "—"
@@ -621,12 +692,21 @@ def _fmt_ts(ts) -> str:
 # Main entry point
 # ---------------------------------------------------------------------------
 
-def main_menu() -> None:
+
+
+# The main_menu function is the entry point of the CLI application. 
+# It initializes the database and displays the main menu to the user, 
+#       allowing them to choose between logging in, registering a new account, recovering their account, or exiting the application.
+#  Based on the user's choice, it directs them to the appropriate flow for login, registration, or account recovery. 
+# The function also handles exiting the application gracefully when the user chooses to do so.
+
+
+def main_menu() -> None: # 
     init_db()
-    while True:
+    while True:  # 
         clr()
         print_banner()
-        print(f"  {Fore.CYAN}Secure Financial Authentication System{Style.RESET_ALL}\n")
+        print(f"  {Fore.CYAN}Secure Financial Authentication System{Style.RESET_ALL}\n") #
 
         options = [
             "Login",
@@ -634,7 +714,7 @@ def main_menu() -> None:
             "Account Recovery (Forgot Password)",
             "Exit",
         ]
-        idx = pick_from_menu("Main Menu", options)
+        idx = pick_from_menu("Main Menu", options)  # Show main menu and get user choice
 
         if idx == 0:
             login_flow()
