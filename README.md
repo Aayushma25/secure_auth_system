@@ -1,4 +1,61 @@
 
+----------------------------------------------------------------------------------------------------
+
+                             Fintech Secure Authentication System
+
+----------------------------------------------------------------------------------------------------
+
+
+## Operating System Compatibility
+
+This application supports:
+
+- Windows
+- macOS
+- Linux
+
+Different launcher scripts are included for different operating systems.
+
+| Operating System | Launcher File |
+|---|---|
+| Windows | `run.bat` |
+| macOS / Linux | `run.sh` |
+
+---
+
+# Running the Application
+
+## Windows
+
+1. Open the project folder
+2. Double-click:
+
+```
+run.bat
+```
+
+OR run from terminal:
+
+```
+run.bat
+```
+
+---
+
+## macOS / Linux
+
+Open Terminal inside the project directory and run:
+
+```bash
+chmod +x run.sh
+./run.sh
+```
+
+Note:
+The executable permission may need to be enabled after downloading the ZIP file from GitHub.
+
+---
+
 
 
 ## System Architecture
@@ -22,6 +79,39 @@ security-critical code (`security.py`, `auth.py`) can be audited independently.
 
 
 
+## Why Python Was Chosen Over C
+
+For the development of this Secure Authentication System, Python was selected instead of C due to several practical and security-oriented advantages.
+
+### 1. Simplicity and Readability
+
+Python has a clear and easy-to-understand syntax, which makes it ideal for implementing authentication logic such as user registration, login validation, and input handling. This improves code maintainability and reduces the chances of logical errors compared to C, which is more complex and verbose.
+
+### 2. Faster Development
+
+Python allows rapid development due to its high-level nature and built-in functionalities. Features like file handling, string manipulation, and modular programming can be implemented with fewer lines of code, enabling efficient project completion within limited time constraints.
+
+### 3. Built-in Security Libraries
+
+Python provides built-in and well-supported libraries (e.g., hashlib) for implementing secure password hashing and encryption. In contrast, C requires manual implementation or external libraries, which increases complexity and the risk of security vulnerabilities.
+
+### 4. Reduced Risk of Memory Errors
+
+C requires manual memory management, which can lead to issues such as buffer overflows and memory leaks—common causes of security vulnerabilities. Python handles memory management automatically, making it a safer choice for building a secure system.
+
+### 5. Better Suitability for CLI Applications
+
+Python is well-suited for building command-line interface (CLI) applications with user-friendly input/output handling. This makes it easier to design an interactive authentication system.
+
+### 6. Strong Community Support
+
+Python has extensive documentation and community support, making it easier to troubleshoot issues and implement best practices in security and software design.
+
+### Conclusion
+
+Overall, Python provides a balance of simplicity, security, and development speed, making it a more suitable choice than C for implementing a secure authentication system in this project.
+
+
 
 ## Security Design Decisions
 
@@ -42,10 +132,10 @@ brute-force even with GPU clusters or ASICs. It is standardised in
 RFC 7914 and recommended by NIST SP 800-132.
 
 **Parameters chosen:**
-- `N=131072` (2^17) — work factor; ~0.5 s on modern hardware
-- `r=8` — block size
-- `p=1` — parallelism
-- `dklen=64` — 512-bit derived key
+- `N=131072` (2^17) - work factor; ~0.5 s on modern hardware
+- `r=8` - block size
+- `p=1` - parallelism
+- `dklen=64` - 512-bit derived key
 - `salt=32 bytes` (256-bit random salt per password)
 
 The stored format is: `scrypt$<hex_salt>$<hex_dk>`
@@ -61,7 +151,7 @@ timing information that can be exploited to recover secrets.
 
 ---
 
-### 2. Multi-Factor Authentication — TOTP (RFC 6238)
+### 2. Multi-Factor Authentication - TOTP (RFC 6238)
 
 TOTP (Time-based One-Time Password) adds a second factor beyond the
 password. Even if the password is stolen, an attacker cannot log in
@@ -91,7 +181,7 @@ After **5 consecutive failed login attempts**, the account is locked
 for **30 minutes**. This prevents online brute-force attacks.
 
 - The lockout timer is server-side (cannot be bypassed by the client).
-- The lockout automatically expires — no admin action needed.
+- The lockout automatically expires - no admin action needed.
 - Account recovery (see below) also unlocks the account.
 - Audit events are emitted for every failed attempt and every lockout.
 
@@ -105,7 +195,7 @@ constants in `auth.py` (`MAX_FAILED_ATTEMPTS`, `LOCKOUT_DURATION_SECONDS`).
 Sessions use 256-bit URL-safe random tokens (`secrets.token_urlsafe(32)`).
 
 **Why not JWTs?**
-JWTs are stateless — they cannot be revoked without maintaining a
+JWTs are stateless - they cannot be revoked without maintaining a
 denylist, which is effectively a session store anyway. SQLite sessions
 allow immediate revocation on logout or password change.
 
@@ -139,7 +229,7 @@ generic message, regardless of whether the email is registered.
 This prevents attackers from harvesting valid email addresses by
 probing the recovery endpoint.
 
-**Rate limiting:** Max 3 active tokens per user at any time — prevents
+**Rate limiting:** Max 3 active tokens per user at any time - prevents
 token-flooding DoS against the recovery_tokens table.
 
 **Single-use tokens:** Once redeemed, a token can never be reused,
@@ -206,9 +296,9 @@ inherently more robust.
 
 The audit system is designed so that secrets **never appear in logs**:
 
-- Passwords are never logged — only "bad_password" as an outcome.
-- Session tokens are never logged — only their existence/deletion.
-- Recovery tokens are never logged — only their hash.
+- Passwords are never logged - only "bad_password" as an outcome.
+- Session tokens are never logged - only their existence/deletion.
+- Recovery tokens are never logged - only their hash.
 - The `detail` field in audit events contains only safe, generic info.
 
 ---
@@ -308,7 +398,10 @@ All sensitive tables have an `hmac TEXT` column for integrity verification.
 
 ---
 
-## Running & Testing
+
+
+
+
 
 ### First run
 
@@ -324,6 +417,40 @@ python main.py
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Use of Gen AI
+
+Use of Generative AI
+In developing this FinTech Secure Authentication System, I used Chatgpt, a Generative AI assistant by OpenAI, to help design and implement several key parts of the project. Specifically, in security.py, AI helped me implement the password hashing function hash_password() using Python's hashlib.scrypt algorithm, explaining why scrypt is more secure than MD5 or SHA-256 and how to correctly set the parameters like the work factor, salt size, and derived key length. It also helped me implement the entire TOTP multi-factor authentication system from scratch - the _hotp(), generate_totp(), and verify_totp() functions - following the RFC 6238 and RFC 4226 specifications, which I would not have been able to find and implement correctly on my own. In auth.py, AI helped me understand and implement the account lockout mechanism in _increment_failed_attempts(), the timing attack prevention in attempt_login() using a dummy scrypt hash for unknown usernames, and the session token system in _create_session() where only the SHA-256 hash of the token is stored in the database. In recovery.py, AI helped me implement the anti-enumeration protection in request_recovery() and the single-use token system in redeem_recovery_token(). In audit.py, AI helped me set up the dual-write audit trail using Python's RotatingFileHandler class and explained why writing to both the database and a file simultaneously makes the audit evidence more reliable. In integrity.py, AI helped me design the IntegrityReport dataclass and the compute_record_hmac() function in security.py that signs every database row with HMAC-SHA256 so that any tampering with the database can be detected. Overall, AI served as a knowledgeable guide throughout the project - it explained the reasoning behind each security decision, pointed me to the relevant standards and best practices, and helped me write code that I then reviewed, tested, and understood myself. Without AI assistance, implementing correct cryptographic standards like RFC 6238 and following NIST SP 800-63B password guidelines would have been significantly more difficult within the time available for this assignment.
+
+
+ 
 
 
 
