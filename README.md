@@ -413,37 +413,6 @@ python main.py
 ```
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Use of Gen AI
 
 Use of Generative AI
@@ -451,8 +420,39 @@ In developing this FinTech Secure Authentication System, I used Chatgpt, a Gener
 
 
  
+## Refrences
 
+1. Percival, C. and Josefsson, S. (2016) *The scrypt Password-Based
+   Key Derivation Function*. RFC 7914. IETF.
+   https://www.rfc-editor.org/rfc/rfc7914
 
+2. M'Raihi, D. et al. (2011) *TOTP: Time-Based One-Time Password
+   Algorithm*. RFC 6238. IETF.
+   https://www.rfc-editor.org/rfc/rfc6238
+
+3. M'Raihi, D. et al. (2005) *HOTP: An HMAC-Based One-Time Password
+   Algorithm*. RFC 4226. IETF.
+   https://www.rfc-editor.org/rfc/rfc4226
+
+4. Krawczyk, H., Bellare, M. and Canetti, R. (1997) *HMAC:
+   Keyed-Hashing for Message Authentication*. RFC 2104. IETF.
+   https://www.rfc-editor.org/rfc/rfc2104
+
+5. Grassi, P.A. et al. (2017) *NIST SP 800-63B: Digital Identity
+   Guidelines*. NIST, U.S. Department of Commerce.
+   https://doi.org/10.6028/NIST.SP.800-63b
+
+6. OWASP Foundation (2021) *OWASP Top Ten 2021 — A03: Injection*.
+   https://owasp.org/Top10/A03_2021-Injection/
+
+7. Kocher, P.C. (1996) 'Timing Attacks on Implementations of
+   Diffie-Hellman, RSA, DSS, and Other Systems', CRYPTO 96,
+   Springer, pp. 104-113.
+   https://doi.org/10.1007/3-540-68697-5_9
+
+8. ISO/IEC 27001:2013 (2013) *Information Security Management
+   Systems: Requirements*. Geneva: ISO.
+   https://www.iso.org/standard/54534.html
 
 
 
