@@ -55,14 +55,14 @@ BANNER = r"""
        Secure Authentication System  |  FinTech Edition
 """
 
-
-def clr() -> None:
-    os.system("cls" if os.name == "nt" else "clear")
+# The clr function clears the console screen in a cross-platform way, using "cls" for Windows and "clear" for Unix-based systems.
+def clr() -> None: # Clear the console screen (cross-platform)
+    os.system("cls" if os.name == "nt" else "clear")  # Clear the console screen (cross-platform)
 
 
 def print_banner() -> None:
-    print(Fore.CYAN + BANNER + Style.RESET_ALL)
-    print(Fore.YELLOW + "  " + "─" * 58 + Style.RESET_ALL)
+    print(Fore.CYAN + BANNER + Style.RESET_ALL) # Print the main banner
+    print(Fore.YELLOW + "  " + "─" * 58 + Style.RESET_ALL) # Print a yellow separator line below the banner
 
 def success(msg: str) -> None:
     print(f"\n{Fore.GREEN}  ✔️  {msg}{Style.RESET_ALL}\n")
